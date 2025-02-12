@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EXPEDIENTES DEMA - Inicio de Sesión</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .login-container, .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        select, input, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .area-section {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .folder, .subfolder {
+            background: #ddd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .folder:hover, .subfolder:hover {
+            background: #bbb;
+        }
+
+        .file-item {
+            background: #f0f0f0;
+            padding: 8px;
+            margin: 3px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .file-item:hover {
+            background: #dcdcdc;
+        }
+
+        .pdf-viewer {
+            margin-top: 20px;
+            max-width: 100%;
+            height: 500px;
+            display: none;
+        }
+
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Inicio de sesión -->
+    <div class="login-container">
+        <h2>EXPEDIENTES DEMA</h2>
+        <form id="login-form">
+            <label for="username">Usuario:</label>
+            <input type="text" id="username" required>
+            
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" required>
+            
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+        <p id="error-message" class="error"></p>
+    </div>
+
+    <!-- Gestión de Documentos PDF (oculta hasta que se inicie sesión correctamente) -->
+    <div class="container" id="document-section" style="display:none;">
+        <h2>Gestión de Documentos PDF</h2>
+
+        <form id="uploadForm">
+            <label for="area">Selecciona el Área:</label>
+            <select id="area">
+                <option value="medica">Área Médica</option>
+                <option value="pedagogia">Pedagogía</option>
+                <option value="criminologia">Criminología</option>
+                <option value="psicologia">Psicología</option>
+                <option value="direccion">Dirección</option>
+                <option value="trabajo_social">Trabajo Social</option>
+                <option value="juridico">Jurídico</option>
+                <option value="horario_actividades">Horario de Actividades</option>
+            </select>
+
+            <label for="folder">Nombre de la Carpeta (Opcional):</label>
+            <input type="text" id="folder" placeholder="Ejemplo: Expedientes">
+
+            <label for="subfolder">Nombre de la Subcarpeta (Opcional):</label>
+            <input type="text" id="subfolder" placeholder="Ejemplo: Documentos Importantes">
+
+            <label for="file">Selecciona el Archivo:</label>
+            <input type="file" id="file" accept="application/pdf" multiple required>
+
+            <button type="submit">Subir Archivo</button>
+        </form>
+
+        <h3>Áreas y Documentos</h3>
+        <div id="areaList" class="area-section"></div>
+
+        <iframe id="pdfViewer" class="pdf-viewer"></iframe>
+    </div>
+
+    <script>
+        // Login functionality
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Datos de acceso
+            const validUser = 'admin';
+            const validPassword = '2024contraseña';
+
+            if (username === validUser && password === validPassword) {
+                document.querySelector('.login-container').style.display = 'none';
+                document.getElementById('document-section').style.display = 'block';
+            } else {
+                document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos.';
+            }
+        });
+
+        // Gestión de documentos PDF
+        let areas = {};
+
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const area = document.getElementById('area').value;
+            const folderName = document.getElementById('folder').value.trim() || "General";
+            const subfolderName = document.getElementById('subfolder').value.trim() || "Sin subcarpeta";
+            const fileInput = document.getElementById('file');
+            const files = fileInput.files;
+
+            if (!files.length) {
+                alert("Por favor, selecciona al menos un archivo.");
+                return;
+            }
+
+            if (!areas[area]) {
+                areas[area] = {};
+            }
+
+            if (!areas[area][folderName]) {
+                areas[area][folderName] = {};
+            }
+
+            if (!areas[area][folderName][subfolderName]) {
+                areas[area][folderName][subfolderName] = [];
+            }
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const fileUrl = event.target.result;
+                    areas[area][folderName][subfolderName].push({ name: file.name, url: fileUrl });
+                    renderAreas();
+                };
+                reader.readAsDataURL(file);
+            });
+
+            fileInput.value = "";
+            document.getElementById('folder').value = "";
+            document.getElementById('subfolder').value = "";
+        });
+
+        function renderAreas() {
+            const areaList = document.getElementById('areaList');
+            areaList.innerHTML = "";
+
+            for (const area in areas) {
+                const areaDiv = document.createElement('div');
+                areaDiv.innerHTML = `<h3>${getAreaName(area)}</h3>`;
+                
+                for (const folder in areas[area]) {
+                    const folderDiv = document.createElement('div');
+                    folderDiv.classList.add('folder');
+                    folderDiv.textContent = `📁 ${folder}`;
+                    
+                    const folderContent = document.createElement('div');
+                    folderContent.style.display = "none";
+
+                    folderDiv.addEventListener('click', function() {
+                        folderContent.style.display = folderContent.style.display === "none" ? "block" : "none";
+                    });
+
+                    for (const subfolder in areas[area][folder]) {
+                        const subfolderDiv = document.createElement('div');
+                        subfolderDiv.classList.add('subfolder');
+                        subfolderDiv.textContent = `📂 ${subfolder}`;
+
+                        const fileListDiv = document.createElement('div');
+                        fileListDiv.style.display = "none";
+
+                        subfolderDiv.addEventListener('click', function() {
+                            fileListDiv.style.display = fileListDiv.style.display === "none" ? "block" : "none";
+                        });
+
+                        areas[area][folder][subfolder].forEach(file => {
+                            const fileItem = document.createElement('div');
+                            fileItem.classList.add('file-item');
+                            fileItem.textContent = `📄 ${file.name}`;
+                            fileItem.addEventListener('click', function() {
+                                document.getElementById('pdfViewer').src = file.url;
+                                document.getElementById('pdfViewer').style.display = 'block';
+                            });
+
+                            fileListDiv.appendChild(fileItem);
+                        });
+
+                        subfolderDiv.appendChild(fileListDiv);
+                        folderContent.appendChild(subfolderDiv);
+                    }
+
+                    areaDiv.appendChild(folderDiv);
+                    areaDiv.appendChild(folderContent);
+                }
+
+                areaList.appendChild(areaDiv);
+            }
+        }
+
+        function getAreaName(key) {
+            const areaNames = {
+                "medica": "Área Médica",
+                "pedagogia": "Pedagogía",
+                "criminologia": "Criminología",
+                "psicologia": "Psicología",
+                "direccion": "Dirección",
+                "trabajo_social": "Trabajo Social",
+                "juridico": "Jurídico",
+                "horario_actividades": "Horario de Actividades"
+            };
+            return areaNames[key] || key;
+        }
+    </script>
+
+</body>
+</html>
