@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EXPEDIENTES DEMA - Inicio de Sesión</title>
+    <title>EXPEDIENTES DEMA - Gestión de Documentos</title>
     <link rel="stylesheet" href="styles.css">
     <style>
+        /* Estilos previos */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
@@ -40,14 +41,14 @@
         }
 
         button {
-            background-color: #00bfff; /* Azul celeste */
+            background-color: #007bff;
             color: white;
             border: none;
             cursor: pointer;
         }
 
         button:hover {
-            background-color: #009acd;
+            background-color: #0056b3;
         }
 
         .area-section {
@@ -91,27 +92,9 @@
         .error {
             color: red;
         }
-
-        .logo {
-            display: block;
-            margin: 0 auto;
-            width: 100px;
-            height: 96px;
-        }
-
-        .record-list {
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid #ccc;
-            margin-top: 20px;
-            padding: 10px;
-        }
     </style>
 </head>
 <body>
-
-    <!-- Logo -->
-    <img src="logo_sspc2.png" alt="Logo SSPC" class="logo">
 
     <!-- Inicio de sesión -->
     <div class="login-container">
@@ -161,6 +144,10 @@
         <div id="areaList" class="area-section"></div>
 
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
+
+        <!-- Botón de guardar PDF y cerrar sesión -->
+        <button id="save-pdf" style="margin-top: 20px;">Guardar PDF</button>
+        <button id="logout" style="margin-top: 10px;">Cerrar Sesión</button>
     </div>
 
     <script>
@@ -177,6 +164,8 @@
             if (username === validUser && password === validPassword) {
                 document.querySelector('.login-container').style.display = 'none';
                 document.getElementById('document-section').style.display = 'block';
+                // Guardamos el estado de sesión en el localStorage
+                localStorage.setItem('loggedIn', 'true');
             } else {
                 document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos.';
             }
@@ -295,6 +284,26 @@
             };
             return areaNames[key] || key;
         }
+
+        // Guardar PDF en el localStorage
+        document.getElementById('save-pdf').addEventListener('click', function() {
+            const pdfData = document.getElementById('pdfViewer').src;
+            if (pdfData) {
+                const storedPDFs = JSON.parse(localStorage.getItem('pdfs')) || [];
+                storedPDFs.push(pdfData);
+                localStorage.setItem('pdfs', JSON.stringify(storedPDFs));
+                alert('PDF guardado en el almacenamiento local.');
+            } else {
+                alert('Por favor, visualiza un PDF antes de guardarlo.');
+            }
+        });
+
+        // Cerrar sesión y redirigir al login
+        document.getElementById('logout').addEventListener('click', function() {
+            localStorage.removeItem('loggedIn');
+            document.querySelector('.login-container').style.display = 'block';
+            document.getElementById('document-section').style.display = 'none';
+        });
     </script>
 
 </body>
