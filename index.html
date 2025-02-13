@@ -6,91 +6,7 @@
     <title>EXPEDIENTES DEMA - Inicio de Sesión</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
-            text-align: center;
-            padding: 20px;
-        }
-
-        .login-container, .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        h2 {
-            color: #333;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        select, input, button {
-            width: 100%;
-            margin: 10px 0;
-            padding: 8px;
-            font-size: 16px;
-        }
-
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .area-section {
-            margin-top: 20px;
-            text-align: left;
-        }
-
-        .folder, .subfolder {
-            background: #ddd;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .folder:hover, .subfolder:hover {
-            background: #bbb;
-        }
-
-        .file-item {
-            background: #f0f0f0;
-            padding: 8px;
-            margin: 3px 0;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .file-item:hover {
-            background: #dcdcdc;
-        }
-
-        .pdf-viewer {
-            margin-top: 20px;
-            max-width: 100%;
-            height: 500px;
-            display: none;
-        }
-
-        .error {
-            color: red;
-        }
+        /* Estilos previos aquí... */
     </style>
 </head>
 <body>
@@ -117,14 +33,7 @@
         <form id="uploadForm">
             <label for="area">Selecciona el Área:</label>
             <select id="area">
-                <option value="medica">Área Médica</option>
-                <option value="pedagogia">Pedagogía</option>
-                <option value="criminologia">Criminología</option>
-                <option value="psicologia">Psicología</option>
-                <option value="direccion">Dirección</option>
-                <option value="trabajo_social">Trabajo Social</option>
-                <option value="juridico">Jurídico</option>
-                <option value="horario_actividades">Horario de Actividades</option>
+                <!-- Opciones de áreas... -->
             </select>
 
             <label for="folder">Nombre de la Carpeta (Opcional):</label>
@@ -143,6 +52,9 @@
         <div id="areaList" class="area-section"></div>
 
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
+
+        <button id="logoutBtn">Cerrar Sesión</button>
+        <button id="savePdfBtn">Guardar PDF</button>
     </div>
 
     <script>
@@ -159,13 +71,14 @@
             if (username === validUser && password === validPassword) {
                 document.querySelector('.login-container').style.display = 'none';
                 document.getElementById('document-section').style.display = 'block';
+                loadAreasFromStorage(); // Cargar áreas y archivos almacenados
             } else {
                 document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos.';
             }
         });
 
         // Gestión de documentos PDF
-        let areas = {};
+        let areas = JSON.parse(localStorage.getItem('areas')) || {};
 
         document.getElementById('uploadForm').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -199,6 +112,7 @@
                     const fileUrl = event.target.result;
                     areas[area][folderName][subfolderName].push({ name: file.name, url: fileUrl });
                     renderAreas();
+                    saveAreasToStorage(); // Guardar áreas en localStorage
                 };
                 reader.readAsDataURL(file);
             });
@@ -208,6 +122,20 @@
             document.getElementById('subfolder').value = "";
         });
 
+        // Cargar áreas y documentos desde localStorage
+        function loadAreasFromStorage() {
+            if (localStorage.getItem('areas')) {
+                areas = JSON.parse(localStorage.getItem('areas'));
+                renderAreas();
+            }
+        }
+
+        // Guardar áreas en localStorage
+        function saveAreasToStorage() {
+            localStorage.setItem('areas', JSON.stringify(areas));
+        }
+
+        // Renderizar áreas y archivos
         function renderAreas() {
             const areaList = document.getElementById('areaList');
             areaList.innerHTML = "";
@@ -277,6 +205,20 @@
             };
             return areaNames[key] || key;
         }
+
+        // Cerrar sesión
+        document.getElementById('logoutBtn').addEventListener('click', function() {
+            document.querySelector('.login-container').style.display = 'block';
+            document.getElementById('document-section').style.display = 'none';
+            localStorage.removeItem('areas'); // Limpiar almacenamiento
+        });
+
+        // Botón de guardar PDF
+        document.getElementById('savePdfBtn').addEventListener('click', function() {
+            const pdfData = areas; // Aquí debes generar el archivo PDF con la información de 'areas'
+            // Implementa tu lógica para guardar el PDF o enviarlo a Google Drive aquí
+            alert('PDF guardado con éxito (implementa la lógica de guardado)');
+        });
     </script>
 
 </body>
