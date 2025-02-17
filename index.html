@@ -92,12 +92,20 @@
         .error {
             color: red;
         }
+
+        .logo {
+            display: block;
+            margin: 0 auto;
+            width: 100px;
+            height: 96px;
+        }
     </style>
 </head>
 <body>
 
     <!-- Inicio de sesión -->
     <div class="login-container">
+        <img src="logo_sspc2.png" alt="Logo SSPC" class="logo">
         <h2>EXPEDIENTES DEMA</h2>
         <form id="login-form">
             <label for="username">Usuario:</label>
@@ -113,6 +121,7 @@
 
     <!-- Gestión de Documentos PDF (oculta hasta que se inicie sesión correctamente) -->
     <div class="container" id="document-section" style="display:none;">
+        <img src="logo_sspc2.png" alt="Logo SSPC" class="logo">
         <h2>Gestión de Documentos PDF</h2>
 
         <form id="uploadForm">
@@ -308,3 +317,4 @@
 
 </body>
 </html>
+
