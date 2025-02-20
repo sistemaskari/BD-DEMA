@@ -3,143 +3,281 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Internos</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+    <title>EXPEDIENTES DEMA - Inicio de Sesión</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; }
-        .container { max-width: 500px; margin: auto; background: white; padding: 20px; border-radius: 8px; }
-        h2, h3 { text-align: center; margin-top: 20px; }
-        label { font-weight: bold; }
-        input, button, select { width: 100%; margin-bottom: 10px; padding: 10px; }
-        .btn { background-color: #007bff; color: white; border: none; cursor: pointer; }
-        .btn:hover { background-color: #0056b3; }
-        .output { white-space: pre-wrap; background-color: #f9f9f9; padding: 10px; border-radius: 5px; }
-        .record-list { max-height: 200px; overflow-y: auto; border: 1px solid #ccc; margin-top: 20px; padding: 10px; }
-        .select-container { margin-bottom: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .login-container, .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        select, input, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .area-section {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .folder, .subfolder {
+            background: #ddd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .folder:hover, .subfolder:hover {
+            background: #bbb;
+        }
+
+        .file-item {
+            background: #f0f0f0;
+            padding: 8px;
+            margin: 3px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .file-item:hover {
+            background: #dcdcdc;
+        }
+
+        .pdf-viewer {
+            margin-top: 20px;
+            max-width: 100%;
+            height: 500px;
+            display: none;
+        }
+
+        .error {
+            color: red;
+        }
     </style>
 </head>
 <body>
-    <script>
-        // Verificar autenticación
-        if (!localStorage.getItem('loggedIn')) {
-            window.location.href = 'index.html';
-        }
-    </script>
 
-    <div class="container">
-        <img src="logo_sspc2.png" alt="Logo SSPC" style="display: block; margin: auto; width: 100px; height: auto;">
-        <h3>Centro de Internamiento:</h3>
-        <input type="text" id="centroInternamiento" value="DIRECCIÓN DE EJECUCIÓN DE MEDIDAS PARA ADOLESCENTES" required>
+    <!-- Inicio de sesión -->
+    <div class="login-container">
+        <h2>EXPEDIENTES DEMA</h2>
+        <form id="login-form">
+            <label for="username">Usuario:</label>
+            <input type="text" id="username" required>
+            
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" required>
+            
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+        <p id="error-message" class="error"></p>
+    </div>
 
-        <h2>Registro de Internos</h2>
-        <form id="registroForm">
-            <label for="fecha">Fecha:</label>
-            <input type="date" id="fecha" required>
+    <!-- Gestión de Documentos PDF (oculta hasta que se inicie sesión correctamente) -->
+    <div class="container" id="document-section" style="display:none;">
+        <h2>Gestión de Documentos PDF</h2>
 
-            <label for="hora">Hora:</label>
-            <input type="time" id="hora" required>
+        <form id="uploadForm">
+            <label for="area">Selecciona el Área:</label>
+            <select id="area">
+                <option value="medica">Área Médica</option>
+                <option value="pedagogia">Pedagogía</option>
+                <option value="criminologia">Criminología</option>
+                <option value="psicologia">Psicología</option>
+                <option value="direccion">Dirección</option>
+                <option value="trabajo_social">Trabajo Social</option>
+                <option value="juridico">Jurídico</option>
+                <option value="horario_actividades">Horario de Actividades</option>
+            </select>
 
-            <label for="motivo">Motivo:</label>
-            <input type="text" id="motivo" required>
+            <label for="folder">Nombre de la Carpeta (Opcional):</label>
+            <input type="text" id="folder" placeholder="Ejemplo: Expedientes">
 
-            <label for="excarceladosH">Excarcelados (Hombres):</label>
-            <input type="number" id="excarceladosH" required oninput="sumarTotal()">
+            <label for="subfolder">Nombre de la Subcarpeta (Opcional):</label>
+            <input type="text" id="subfolder" placeholder="Ejemplo: Documentos Importantes">
 
-            <label for="excarceladosM">Excarcelados (Mujeres):</label>
-            <input type="number" id="excarceladosM" required oninput="sumarTotal()">
+            <label for="file">Selecciona el Archivo:</label>
+            <input type="file" id="file" accept="application/pdf" multiple required>
 
-            <label for="presentesH">Presentes (Hombres):</label>
-            <input type="number" id="presentesH" required oninput="sumarTotal()">
-
-            <label for="presentesM">Presentes (Mujeres):</label>
-            <input type="number" id="presentesM" required oninput="sumarTotal()">
-
-            <label for="total">Total:</label>
-            <input type="number" id="total" required readonly>
-
-            <label for="custodioResponsable">Custodio Responsable:</label>
-            <input type="text" id="custodioResponsable" required>
-
-            <label for="personalDGRS">Personal de la D.G.R.S.:</label>
-            <input type="text" id="personalDGRS" required>
-
-            <button type="button" class="btn" onclick="guardarRegistro()">Guardar</button>
-            <button type="button" class="btn" onclick="exportarPDF()">Guardar PDF del Día</button>
-            <button type="button" class="btn" onclick="exportarPDFCompleto()">Guardar PDF Completo</button>
-            <button type="button" class="btn" onclick="cerrarSesion()">Cerrar Sesión</button>
+            <button type="submit">Subir Archivo</button>
         </form>
 
-        <label for="fechaSeleccion">Selecciona Fecha para Ver Registros:</label>
-        <select id="fechaSeleccion" onchange="mostrarRegistrosPorFecha()"></select>
-        <div class="record-list" id="recordList"></div>
+        <h3>Áreas y Documentos</h3>
+        <div id="areaList" class="area-section"></div>
+
+        <iframe id="pdfViewer" class="pdf-viewer"></iframe>
     </div>
 
     <script>
-        function sumarTotal() {
-            const excarceladosH = parseInt(document.getElementById('excarceladosH').value) || 0;
-            const excarceladosM = parseInt(document.getElementById('excarceladosM').value) || 0;
-            const presentesH = parseInt(document.getElementById('presentesH').value) || 0;
-            const presentesM = parseInt(document.getElementById('presentesM').value) || 0;
-            document.getElementById('total').value = excarceladosH + excarceladosM + presentesH + presentesM;
-        }
+        // Login functionality
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
 
-        function guardarRegistro() {
-            const formData = new FormData(document.getElementById('registroForm'));
-            let registro = {};
-            formData.forEach((value, key) => registro[key] = value.toUpperCase());
+            // Datos de acceso
+            const validUser = 'admin';
+            const validPassword = '2024contraseña';
 
-            let registrosPorFecha = JSON.parse(localStorage.getItem('registrosPorFecha')) || {};
-            let registros = registrosPorFecha[registro.fecha] || [];
+            if (username === validUser && password === validPassword) {
+                document.querySelector('.login-container').style.display = 'none';
+                document.getElementById('document-section').style.display = 'block';
+            } else {
+                document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos.';
+            }
+        });
 
-            registros.push(registro);
-            registrosPorFecha[registro.fecha] = registros;
-            localStorage.setItem('registrosPorFecha', JSON.stringify(registrosPorFecha));
+        // Gestión de documentos PDF
+        let areas = {};
 
-            alert('Registro guardado con éxito.');
-            actualizarFechasDisponibles();
-        }
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
 
-        function exportarPDF() {
-            const fechaSeleccionada = document.getElementById('fechaSeleccion').value;
-            let registrosPorFecha = JSON.parse(localStorage.getItem('registrosPorFecha')) || {};
-            let registros = registrosPorFecha[fechaSeleccionada] || [];
-            generarPDF(registros, `registro_internos_${fechaSeleccionada}.pdf`);
-        }
+            const area = document.getElementById('area').value;
+            const folderName = document.getElementById('folder').value.trim() || "General";
+            const subfolderName = document.getElementById('subfolder').value.trim() || "Sin subcarpeta";
+            const fileInput = document.getElementById('file');
+            const files = fileInput.files;
 
-        function exportarPDFCompleto() {
-            let registrosPorFecha = JSON.parse(localStorage.getItem('registrosPorFecha')) || {};
-            let registros = Object.values(registrosPorFecha).flat();
-            generarPDF(registros, 'registro_internos_completo.pdf');
-        }
+            if (!files.length) {
+                alert("Por favor, selecciona al menos un archivo.");
+                return;
+            }
 
-        function generarPDF(registros, fileName) {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            const headers = ['Fecha', 'Hora', 'Motivo', 'Excarcelados H', 'Excarcelados M', 'Presentes H', 'Presentes M', 'Total', 'Custodio', 'Personal D.G.R.S.'];
-            const data = registros.map(registro => Object.values(registro));
+            if (!areas[area]) {
+                areas[area] = {};
+            }
 
-            doc.text('Registro de Internos', 10, 10);
-            doc.autoTable({ startY: 20, head: [headers], body: data });
-            doc.save(fileName);
-        }
+            if (!areas[area][folderName]) {
+                areas[area][folderName] = {};
+            }
 
-        function actualizarFechasDisponibles() {
-            const fechaSeleccion = document.getElementById('fechaSeleccion');
-            let registrosPorFecha = JSON.parse(localStorage.getItem('registrosPorFecha')) || {};
-            fechaSeleccion.innerHTML = '';
-            Object.keys(registrosPorFecha).forEach(fecha => {
-                let option = new Option(fecha, fecha);
-                fechaSeleccion.appendChild(option);
+            if (!areas[area][folderName][subfolderName]) {
+                areas[area][folderName][subfolderName] = [];
+            }
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const fileUrl = event.target.result;
+                    areas[area][folderName][subfolderName].push({ name: file.name, url: fileUrl });
+                    renderAreas();
+                };
+                reader.readAsDataURL(file);
             });
+
+            fileInput.value = "";
+            document.getElementById('folder').value = "";
+            document.getElementById('subfolder').value = "";
+        });
+
+        function renderAreas() {
+            const areaList = document.getElementById('areaList');
+            areaList.innerHTML = "";
+
+            for (const area in areas) {
+                const areaDiv = document.createElement('div');
+                areaDiv.innerHTML = `<h3>${getAreaName(area)}</h3>`;
+                
+                for (const folder in areas[area]) {
+                    const folderDiv = document.createElement('div');
+                    folderDiv.classList.add('folder');
+                    folderDiv.textContent = `📁 ${folder}`;
+                    
+                    const folderContent = document.createElement('div');
+                    folderContent.style.display = "none";
+
+                    folderDiv.addEventListener('click', function() {
+                        folderContent.style.display = folderContent.style.display === "none" ? "block" : "none";
+                    });
+
+                    for (const subfolder in areas[area][folder]) {
+                        const subfolderDiv = document.createElement('div');
+                        subfolderDiv.classList.add('subfolder');
+                        subfolderDiv.textContent = `📂 ${subfolder}`;
+
+                        const fileListDiv = document.createElement('div');
+                        fileListDiv.style.display = "none";
+
+                        subfolderDiv.addEventListener('click', function() {
+                            fileListDiv.style.display = fileListDiv.style.display === "none" ? "block" : "none";
+                        });
+
+                        areas[area][folder][subfolder].forEach(file => {
+                            const fileItem = document.createElement('div');
+                            fileItem.classList.add('file-item');
+                            fileItem.textContent = `📄 ${file.name}`;
+                            fileItem.addEventListener('click', function() {
+                                document.getElementById('pdfViewer').src = file.url;
+                                document.getElementById('pdfViewer').style.display = 'block';
+                            });
+
+                            fileListDiv.appendChild(fileItem);
+                        });
+
+                        subfolderDiv.appendChild(fileListDiv);
+                        folderContent.appendChild(subfolderDiv);
+                    }
+
+                    areaDiv.appendChild(folderDiv);
+                    areaDiv.appendChild(folderContent);
+                }
+
+                areaList.appendChild(areaDiv);
+            }
         }
 
-        function cerrarSesion() {
-            localStorage.removeItem('loggedIn');
-            window.location.href = 'index.html';
+        function getAreaName(key) {
+            const areaNames = {
+                "medica": "Área Médica",
+                "pedagogia": "Pedagogía",
+                "criminologia": "Criminología",
+                "psicologia": "Psicología",
+                "direccion": "Dirección",
+                "trabajo_social": "Trabajo Social",
+                "juridico": "Jurídico",
+                "horario_actividades": "Horario de Actividades"
+            };
+            return areaNames[key] || key;
         }
-
-        actualizarFechasDisponibles();
     </script>
+
 </body>
 </html>
