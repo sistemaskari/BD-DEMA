@@ -31,6 +31,7 @@
             color: white;
             border: none;
             cursor: pointer;
+            margin-right: 5px;
         }
         button:hover { background-color: #0056b3; }
         .file-item {
@@ -49,10 +50,33 @@
             display: none;
             border: 1px solid #ccc;
         }
+        .logo {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+        #login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #main-content {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
+
+    <!-- LOGIN -->
+    <div id="login-container">
+        <img src="logo.png" alt="Logo" class="logo">
+        <h2>Iniciar Sesión</h2>
+        <input type="text" id="username" placeholder="Usuario">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button onclick="login()">Ingresar</button>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div id="main-content" class="container">
         <h2>Gestión de Expedientes</h2>
 
         <label for="area">Selecciona el Área:</label>
@@ -71,6 +95,8 @@
         <div id="pdfList"></div>
 
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
+
+        <button onclick="logout()">Cerrar Sesión</button>
     </div>
 
     <script>
@@ -79,7 +105,7 @@
             "medica": [
                 { 
                     nombre: "Resumen Clínico Trimestral - Herlinda.pdf", 
-                    url: "https://raw.githubusercontent.com/sistemaskari/BD-DEMA/a3003d22fb959384a2a2918f60559723c8a2c763/RESUMEN%20CL%C3%8DNICO%20TRIMESTRAL%20HERLINDA.pdf" 
+                    url: "https://raw.githubusercontent.com/sistemaskari/BD-DEMA/main/medica/Resumen-Clinico.pdf"
                 },
                 { 
                     nombre: "Historia Clínica.pdf", 
@@ -136,7 +162,6 @@
             const listaPDF = document.getElementById("pdfList");
             listaPDF.innerHTML = ""; // Limpiar lista
 
-            // Obtener los expedientes del área seleccionada
             const archivos = expedientes[areaSeleccionada] || [];
 
             if (archivos.length === 0) {
@@ -144,22 +169,24 @@
                 return;
             }
 
-            // Crear enlaces a los PDFs
             archivos.forEach(archivo => {
                 const div = document.createElement("div");
                 div.classList.add("file-item");
 
-                // Enlace para ver PDF
-                const link = document.createElement("a");
-                link.href = archivo.url;
-                link.textContent = archivo.nombre;
-                link.target = "_blank";
-                link.onclick = (e) => {
-                    e.preventDefault();
-                    verPDF(archivo.url);
-                };
+                const link = document.createElement("button");
+                link.textContent = "Ver";
+                link.onclick = () => verPDF(archivo.url);
 
+                const downloadBtn = document.createElement("a");
+                downloadBtn.href = archivo.url;
+                downloadBtn.download = archivo.nombre;
+                downloadBtn.textContent = "Descargar";
+                downloadBtn.classList.add("btn");
+
+                div.appendChild(document.createTextNode(archivo.nombre));
                 div.appendChild(link);
+                div.appendChild(downloadBtn);
+
                 listaPDF.appendChild(div);
             });
         }
@@ -171,14 +198,25 @@
             viewer.style.display = "block";
         }
 
-        // 📌 EJECUTAR LA FUNCIÓN CUANDO SE CAMBIE EL ÁREA SELECCIONADA
-        document.getElementById("area").addEventListener("change", mostrarPDFs);
+        // 📌 LOGIN SIMPLIFICADO
+        function login() {
+            const user = document.getElementById("username").value;
+            const pass = document.getElementById("password").value;
+            if (user === "admin" && pass === "1234") {
+                document.getElementById("login-container").style.display = "none";
+                document.getElementById("main-content").style.display = "block";
+            } else {
+                alert("Usuario o contraseña incorrectos");
+            }
+        }
+
+        function logout() {
+            document.getElementById("login-container").style.display = "block";
+            document.getElementById("main-content").style.display = "none";
+        }
 
         // 📌 CARGAR LOS EXPEDIENTES AL ABRIR LA PÁGINA
         window.onload = mostrarPDFs;
     </script>
 </body>
 </html>
-
-
-
