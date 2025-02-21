@@ -33,14 +33,17 @@
             cursor: pointer;
         }
         button:hover { background-color: #0056b3; }
-        .file-item {
+        .folder, .file {
             background: #ddd;
             padding: 10px;
             margin: 5px 0;
             border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            cursor: pointer;
+        }
+        .folder { font-weight: bold; }
+        .subfolder-container {
+            margin-left: 20px;
+            display: none;
         }
         .pdf-viewer {
             margin-top: 20px;
@@ -74,67 +77,76 @@
     </div>
 
     <script>
-        // 📌 LISTA DE EXPEDIENTES POR ÁREA
+        // 📌 LISTA DE EXPEDIENTES POR ÁREA CON CARPETAS Y SUBCARPETAS
         const expedientes = {
-            "medica": [
-                { nombre: "Historia Clínica.pdf", url: "pdfs/medica/Historia-Clinica.pdf" },
-                { nombre: "Diagnóstico Médico.pdf", url: "pdfs/medica/Diagnostico-Medico.pdf" }
-            ],
-            "pedagogia": [
-                { nombre: "Informe Educativo.pdf", url: "pdfs/pedagogia/Informe-Educativo.pdf" }
-            ],
-            "criminologia": [
-                { nombre: "Evaluación de Riesgo.pdf", url: "pdfs/criminologia/Evaluacion-Riesgo.pdf" }
-            ],
-            "psicologia": [
-                { nombre: "Informe Psicológico.pdf", url: "pdfs/psicologia/Informe-Psicologico.pdf" }
-            ],
-            "direccion": [
-                { nombre: "Plan Estratégico.pdf", url: "pdfs/direccion/Plan-Estrategico.pdf" }
-            ],
-            "trabajo_social": [
-                { nombre: "Estudio Socioeconómico.pdf", url: "pdfs/trabajo_social/Estudio-Socioeconomico.pdf" }
-            ],
-            "juridico": [
-                { nombre: "Expediente Legal.pdf", url: "pdfs/juridico/Expediente-Legal.pdf" }
-            ],
-            "horario_actividades": [
-                { nombre: "Horarios.pdf", url: "pdfs/horario_actividades/Horarios.pdf" }
-            ]
+            "medica": {
+                "Consultas": [
+                    { nombre: "Historia Clínica.pdf", url: "pdfs/medica/consultas/Historia-Clinica.pdf" },
+                    { nombre: "Diagnóstico Médico.pdf", url: "pdfs/medica/consultas/Diagnostico-Medico.pdf" }
+                ],
+                "Exámenes": [
+                    { nombre: "Radiografía.pdf", url: "pdfs/medica/examenes/Radiografia.pdf" },
+                    { nombre: "Análisis de Sangre.pdf", url: "pdfs/medica/examenes/Analisis-Sangre.pdf" }
+                ]
+            },
+            "psicologia": {
+                "Evaluaciones": [
+                    { nombre: "Informe Psicológico.pdf", url: "pdfs/psicologia/evaluaciones/Informe-Psicologico.pdf" }
+                ]
+            },
+            "direccion": {
+                "Planes Estratégicos": [
+                    { nombre: "Plan Estratégico.pdf", url: "pdfs/direccion/planes/Plan-Estrategico.pdf" }
+                ]
+            }
         };
 
-        // 📌 FUNCIÓN PARA MOSTRAR LOS EXPEDIENTES SEGÚN EL ÁREA SELECCIONADA
-        function mostrarPDFs() {
+        // 📌 FUNCIÓN PARA MOSTRAR CARPETAS Y ARCHIVOS
+        function mostrarEstructura() {
             const areaSeleccionada = document.getElementById("area").value;
             const listaPDF = document.getElementById("pdfList");
             listaPDF.innerHTML = ""; // Limpiar lista
 
-            // Obtener los expedientes del área seleccionada
-            const archivos = expedientes[areaSeleccionada] || [];
+            // Obtener la estructura del área seleccionada
+            const estructura = expedientes[areaSeleccionada] || {};
 
-            if (archivos.length === 0) {
+            if (Object.keys(estructura).length === 0) {
                 listaPDF.innerHTML = "<p>No hay archivos disponibles para esta área.</p>";
                 return;
             }
 
-            // Crear enlaces a los PDFs
-            archivos.forEach(archivo => {
-                const div = document.createElement("div");
-                div.classList.add("file-item");
+            // Crear estructura de carpetas
+            for (let carpeta in estructura) {
+                const folderDiv = document.createElement("div");
+                folderDiv.classList.add("folder");
+                folderDiv.textContent = carpeta;
+                folderDiv.onclick = () => toggleSubfolder(carpeta);
 
-                // Enlace para ver PDF
-                const link = document.createElement("a");
-                link.href = archivo.url;
-                link.textContent = archivo.nombre;
-                link.target = "_blank";
-                link.onclick = (e) => {
-                    e.preventDefault();
-                    verPDF(archivo.url);
-                };
+                const subfolderContainer = document.createElement("div");
+                subfolderContainer.classList.add("subfolder-container");
+                subfolderContainer.id = `subfolder-${carpeta}`;
 
-                div.appendChild(link);
-                listaPDF.appendChild(div);
-            });
+                estructura[carpeta].forEach(archivo => {
+                    const fileDiv = document.createElement("div");
+                    fileDiv.classList.add("file");
+                    fileDiv.textContent = archivo.nombre;
+                    fileDiv.onclick = () => verPDF(archivo.url);
+                    subfolderContainer.appendChild(fileDiv);
+                });
+
+                listaPDF.appendChild(folderDiv);
+                listaPDF.appendChild(subfolderContainer);
+            }
+        }
+
+        // 📌 FUNCIÓN PARA MOSTRAR U OCULTAR UNA SUBCARPETA
+        function toggleSubfolder(carpeta) {
+            const subfolder = document.getElementById(`subfolder-${carpeta}`);
+            if (subfolder.style.display === "block") {
+                subfolder.style.display = "none";
+            } else {
+                subfolder.style.display = "block";
+            }
         }
 
         // 📌 FUNCIÓN PARA VISUALIZAR EL PDF EN EL IFRAME
@@ -145,11 +157,12 @@
         }
 
         // 📌 EJECUTAR LA FUNCIÓN CUANDO SE CAMBIE EL ÁREA SELECCIONADA
-        document.getElementById("area").addEventListener("change", mostrarPDFs);
+        document.getElementById("area").addEventListener("change", mostrarEstructura);
 
         // 📌 CARGAR LOS EXPEDIENTES AL ABRIR LA PÁGINA
-        window.onload = mostrarPDFs;
+        window.onload = mostrarEstructura;
     </script>
 </body>
 </html>
+
 
