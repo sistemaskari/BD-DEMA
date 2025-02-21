@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EXPEDIENTES DEMA - Gestión de Documentos</title>
+    <title>Gestión de Expedientes</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
             text-align: center;
+            background-color: #f4f4f4;
             padding: 20px;
         }
-        .login-container, .container {
+        .container {
             max-width: 600px;
             margin: auto;
             background: white;
@@ -20,7 +20,7 @@
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
         h2 { color: #333; }
-        select, input, button {
+        select, button {
             width: 100%;
             margin: 10px 0;
             padding: 8px;
@@ -38,101 +38,118 @@
             padding: 10px;
             margin: 5px 0;
             border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .pdf-viewer {
             margin-top: 20px;
             max-width: 100%;
             height: 500px;
             display: none;
+            border: 1px solid #ccc;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>EXPEDIENTES DEMA</h2>
-        <form id="login-form">
-            <label for="username">Usuario:</label>
-            <input type="text" id="username" required>
-            <label for="password">Contraseña:</label>
-            <input type="password" id="password" required>
-            <button type="submit">Iniciar Sesión</button>
-        </form>
-        <p id="error-message" class="error"></p>
-    </div>
-    <div class="container" id="document-section" style="display:none;">
-        <h2>Gestión de Documentos PDF</h2>
-        <label for="uploadPDF">Selecciona un PDF:</label>
-        <input type="file" id="uploadPDF" accept="application/pdf">
-        <button onclick="subirPDF()">Subir PDF</button>
+    <div class="container">
+        <h2>Gestión de Expedientes</h2>
+
+        <label for="area">Selecciona el Área:</label>
+        <select id="area">
+            <option value="medica">Área Médica</option>
+            <option value="pedagogia">Pedagogía</option>
+            <option value="criminologia">Criminología</option>
+            <option value="psicologia">Psicología</option>
+            <option value="direccion">Dirección</option>
+            <option value="trabajo_social">Trabajo Social</option>
+            <option value="juridico">Jurídico</option>
+            <option value="horario_actividades">Horario de Actividades</option>
+        </select>
+
         <h3>Expedientes Guardados</h3>
         <div id="pdfList"></div>
+
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
-        <button id="logout">Cerrar Sesión</button>
     </div>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-        const firebaseConfig = {
-            apiKey: "AIzaSyCRRDU...", // Tu API Key
-            authDomain: "dema-expedientes.firebaseapp.com",
-            projectId: "dema-expedientes",
-            storageBucket: "dema-expedientes.appspot.com",
-            messagingSenderId: "606027989070",
-            appId: "1:606027989070:web:20965dbcf1d38ba6dc031f"
+
+    <script>
+        // 📌 LISTA DE EXPEDIENTES POR ÁREA
+        const expedientes = {
+            "medica": [
+                { nombre: "Historia Clínica.pdf", url: "pdfs/medica/Historia-Clinica.pdf" },
+                { nombre: "Diagnóstico Médico.pdf", url: "pdfs/medica/Diagnostico-Medico.pdf" }
+            ],
+            "pedagogia": [
+                { nombre: "Informe Educativo.pdf", url: "pdfs/pedagogia/Informe-Educativo.pdf" }
+            ],
+            "criminologia": [
+                { nombre: "Evaluación de Riesgo.pdf", url: "pdfs/criminologia/Evaluacion-Riesgo.pdf" }
+            ],
+            "psicologia": [
+                { nombre: "Informe Psicológico.pdf", url: "pdfs/psicologia/Informe-Psicologico.pdf" }
+            ],
+            "direccion": [
+                { nombre: "Plan Estratégico.pdf", url: "pdfs/direccion/Plan-Estrategico.pdf" }
+            ],
+            "trabajo_social": [
+                { nombre: "Estudio Socioeconómico.pdf", url: "pdfs/trabajo_social/Estudio-Socioeconomico.pdf" }
+            ],
+            "juridico": [
+                { nombre: "Expediente Legal.pdf", url: "pdfs/juridico/Expediente-Legal.pdf" }
+            ],
+            "horario_actividades": [
+                { nombre: "Horarios.pdf", url: "pdfs/horario_actividades/Horarios.pdf" }
+            ]
         };
-        const app = initializeApp(firebaseConfig);
-        const storage = getStorage(app);
-        document.getElementById('login-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            if (username === "umecasca@gmail.com" && password === "2025DEMA") {
-                document.querySelector('.login-container').style.display = 'none';
-                document.getElementById('document-section').style.display = 'block';
-            } else {
-                document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos.';
+
+        // 📌 FUNCIÓN PARA MOSTRAR LOS EXPEDIENTES SEGÚN EL ÁREA SELECCIONADA
+        function mostrarPDFs() {
+            const areaSeleccionada = document.getElementById("area").value;
+            const listaPDF = document.getElementById("pdfList");
+            listaPDF.innerHTML = ""; // Limpiar lista
+
+            // Obtener los expedientes del área seleccionada
+            const archivos = expedientes[areaSeleccionada] || [];
+
+            if (archivos.length === 0) {
+                listaPDF.innerHTML = "<p>No hay archivos disponibles para esta área.</p>";
+                return;
             }
-        });
-        async function subirPDF() {
-            const fileInput = document.getElementById("uploadPDF");
-            const pdfFile = fileInput.files[0];
-            if (!pdfFile) { alert("Selecciona un archivo PDF."); return; }
-            const storageRef = ref(storage, `pdfs/${pdfFile.name}`);
-            try {
-                await uploadBytes(storageRef, pdfFile);
-                alert("PDF subido con éxito.");
-                mostrarPDFs();
-            } catch (error) {
-                console.error("Error al subir el archivo:", error);
-                alert("Hubo un error al subir el archivo.");
-            }
+
+            // Crear enlaces a los PDFs
+            archivos.forEach(archivo => {
+                const div = document.createElement("div");
+                div.classList.add("file-item");
+
+                // Enlace para ver PDF
+                const link = document.createElement("a");
+                link.href = archivo.url;
+                link.textContent = archivo.nombre;
+                link.target = "_blank";
+                link.onclick = (e) => {
+                    e.preventDefault();
+                    verPDF(archivo.url);
+                };
+
+                div.appendChild(link);
+                listaPDF.appendChild(div);
+            });
         }
-        async function mostrarPDFs() {
-            const storageRef = ref(storage, "pdfs/");
-            const pdfListDiv = document.getElementById("pdfList");
-            pdfListDiv.innerHTML = "";
-            try {
-                const archivos = await listAll(storageRef);
-                archivos.items.forEach(async (itemRef) => {
-                    const url = await getDownloadURL(itemRef);
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.textContent = itemRef.name;
-                    link.target = "_blank";
-                    pdfListDiv.appendChild(link);
-                    pdfListDiv.appendChild(document.createElement("br"));
-                });
-            } catch (error) {
-                console.error("Error al listar archivos:", error);
-            }
+
+        // 📌 FUNCIÓN PARA VISUALIZAR EL PDF EN EL IFRAME
+        function verPDF(url) {
+            const viewer = document.getElementById("pdfViewer");
+            viewer.src = url;
+            viewer.style.display = "block";
         }
+
+        // 📌 EJECUTAR LA FUNCIÓN CUANDO SE CAMBIE EL ÁREA SELECCIONADA
+        document.getElementById("area").addEventListener("change", mostrarPDFs);
+
+        // 📌 CARGAR LOS EXPEDIENTES AL ABRIR LA PÁGINA
         window.onload = mostrarPDFs;
-        document.getElementById('logout').addEventListener('click', function() {
-            document.querySelector('.login-container').style.display = 'block';
-            document.getElementById('document-section').style.display = 'none';
-        });
     </script>
 </body>
 </html>
+
