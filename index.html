@@ -3,16 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EXPEDIENTES DEMA - Gestión de Documentos</title>
+    <title>Gestión de Expedientes - Firebase</title>
+    <script type="module">
+        // Importar Firebase
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCRRDUfJFAEF3c9lly8tOnIinBrkWoONhk",
+            authDomain: "dema-expedientes.firebaseapp.com",
+            projectId: "dema-expedientes",
+            storageBucket: "dema-expedientes.appspot.com",
+            messagingSenderId: "606027989070",
+            appId: "1:606027989070:web:20965dbcf1d38ba6dc031f",
+            measurementId: "G-B7VMX8HCZG"
+        };
+
+        // Inicializar Firebase
+        const app = initializeApp(firebaseConfig);
+        const storage = getStorage(app);
+
+        // 📌 Función para subir un archivo PDF
+        async function subirPDF() {
+            const fileInput = document.getElementById("uploadPDF");
+            const pdfFile = fileInput.files[0];
+            const area = document.getElementById("area").value;
+            const folder = document.getElementById("folder").value.trim() || "General";
+            const subfolder = document.getElementById("subfolder").value.trim() || "Sin subcarpeta";
+
+            if (!pdfFile) {
+                alert("Selecciona un archivo PDF.");
+                return;
+            }
+
+            // Ruta organizada en Firebase Storage
+            const storageRef = ref(storage, `expedientes/${area}/${folder}/${subfolder}/${pdfFile.name}`);
+
+            try {
+                // Subir el archivo
+                await uploadBytes(storageRef, pdfFile);
+                const downloadURL = await getDownloadURL(storageRef);
+
+                console.log("Archivo subido con éxito:", downloadURL);
+                alert("PDF subido con éxito.");
+                fileInput.value = ""; // Limpiar el input
+
+                // Actualizar la lista de PDFs
+                mostrarPDFs();
+            } catch (error) {
+                console.error("Error al subir el archivo:", error);
+                alert("Error al subir el archivo.");
+            }
+        }
+
+        // 📌 Función para mostrar los PDFs guardados
+        async function mostrarPDFs() {
+            const storageRef = ref(storage, "expedientes/");
+            const pdfListDiv = document.getElementById("pdfList");
+            pdfListDiv.innerHTML = ""; // Limpiar la lista
+
+            try {
+                const archivos = await listAll(storageRef);
+                archivos.items.forEach(async (itemRef) => {
+                    const url = await getDownloadURL(itemRef);
+
+                    // Crear enlace para ver PDF
+                    const pdfItem = document.createElement("div");
+                    pdfItem.classList.add("file-item");
+                    pdfItem.innerHTML = `<a href="#" onclick="verPDF('${url}');">${itemRef.name}</a>`;
+
+                    // Botón para eliminar PDF
+                    const deleteBtn = document.createElement("button");
+                    deleteBtn.textContent = "🗑️";
+                    deleteBtn.onclick = () => eliminarPDF(itemRef.fullPath, pdfItem);
+
+                    pdfItem.appendChild(deleteBtn);
+                    pdfListDiv.appendChild(pdfItem);
+                });
+            } catch (error) {
+                console.error("Error al listar archivos:", error);
+            }
+        }
+
+        // 📌 Función para mostrar el PDF en el visor
+        window.verPDF = function (url) {
+            document.getElementById("pdfViewer").src = url;
+            document.getElementById("pdfViewer").style.display = "block";
+        };
+
+        // 📌 Función para eliminar un PDF de Firebase Storage
+        async function eliminarPDF(path, itemElement) {
+            const fileRef = ref(storage, path);
+            try {
+                await deleteObject(fileRef);
+                alert("Archivo eliminado.");
+                itemElement.remove(); // Quitar de la lista
+            } catch (error) {
+                console.error("Error al eliminar archivo:", error);
+                alert("No se pudo eliminar el archivo.");
+            }
+        }
+
+        // Cargar los PDFs cuando la página cargue
+        window.onload = mostrarPDFs;
+    </script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
             text-align: center;
+            background-color: #f4f4f4;
             padding: 20px;
         }
-
-        .login-container, .container {
+        .container {
             max-width: 600px;
             margin: auto;
             background: white;
@@ -20,216 +123,68 @@
             border-radius: 8px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
-
-        .logo {
-            width: 100px;
-            display: block;
-            margin: 0 auto 10px;
-        }
-
-        h2 {
-            color: #333;
-        }
-
-        select, input, button {
+        h2 { color: #333; }
+        input, select, button {
             width: 100%;
             margin: 10px 0;
             padding: 8px;
             font-size: 16px;
         }
-
         button {
             background-color: #007bff;
             color: white;
             border: none;
             cursor: pointer;
-            border-radius: 5px;
         }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .folder, .subfolder, .file-item {
+        button:hover { background-color: #0056b3; }
+        .file-item {
             background: #ddd;
             padding: 10px;
             margin: 5px 0;
             border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-
-        .folder:hover, .subfolder:hover, .file-item:hover {
-            background: #bbb;
-        }
-
         .pdf-viewer {
             margin-top: 20px;
             max-width: 100%;
             height: 500px;
             display: none;
+            border: 1px solid #ccc;
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h2>Gestión de Expedientes - Firebase</h2>
 
-    <!-- Inicio de sesión -->
-    <div class="login-container">
-        <img src="logo_sspc2.png" alt="Logo SSPC" class="logo">
-        <h2>EXPEDIENTES DEMA</h2>
-        <form id="login-form">
-            <label for="username">Usuario:</label>
-            <input type="text" id="username" required>
-            
-            <label for="password">Contraseña:</label>
-            <input type="password" id="password" required>
-            
-            <button type="submit">Iniciar Sesión</button>
-        </form>
-        <p id="error-message" class="error"></p>
-    </div>
+        <label for="area">Selecciona el Área:</label>
+        <select id="area">
+            <option value="medica">Área Médica</option>
+            <option value="pedagogia">Pedagogía</option>
+            <option value="criminologia">Criminología</option>
+            <option value="psicologia">Psicología</option>
+            <option value="direccion">Dirección</option>
+            <option value="trabajo_social">Trabajo Social</option>
+            <option value="juridico">Jurídico</option>
+            <option value="horario_actividades">Horario de Actividades</option>
+        </select>
 
-    <!-- Gestión de Documentos PDF -->
-    <div class="container" id="document-section" style="display:none;">
-        <img src="logo_sspc2.png" alt="Logo SSPC" class="logo">
-        <h2>Gestión de Documentos PDF</h2>
+        <label for="folder">Nombre de la Carpeta:</label>
+        <input type="text" id="folder" placeholder="Ejemplo: Expedientes">
 
-        <form id="uploadForm">
-            <label for="area">Selecciona el Área:</label>
-            <select id="area">
-                <option value="medica">Área Médica</option>
-                <option value="pedagogia">Pedagogía</option>
-                <option value="criminologia">Criminología</option>
-                <option value="psicologia">Psicología</option>
-                <option value="direccion">Dirección</option>
-                <option value="trabajo_social">Trabajo Social</option>
-                <option value="juridico">Jurídico</option>
-                <option value="horario_actividades">Horario de Actividades</option>
-            </select>
+        <label for="subfolder">Nombre de la Subcarpeta:</label>
+        <input type="text" id="subfolder" placeholder="Ejemplo: Documentos Importantes">
 
-            <label for="folder">Nombre de la Carpeta:</label>
-            <input type="text" id="folder" placeholder="Ejemplo: Expedientes">
+        <label for="uploadPDF">Selecciona un PDF:</label>
+        <input type="file" id="uploadPDF" accept="application/pdf">
+        <button onclick="subirPDF()">Subir PDF</button>
 
-            <label for="subfolder">Nombre de la Subcarpeta:</label>
-            <input type="text" id="subfolder" placeholder="Ejemplo: Documentos Importantes">
-
-            <label for="file">Selecciona el Archivo:</label>
-            <input type="file" id="file" accept="application/pdf" required>
-
-            <button type="submit">Subir Archivo</button>
-        </form>
-
-        <h3>Áreas y Documentos</h3>
-        <div id="areaList"></div>
+        <h3>Expedientes Guardados</h3>
+        <div id="pdfList"></div>
 
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
-
-        <!-- Botón de Guardar PDF -->
-        <button id="savePdfButton" style="display: none;">Guardar PDF</button>
-
-        <button id="logout">Cerrar Sesión</button>
     </div>
-
-    <script>
-        let db;
-        const request = indexedDB.open("ExpedientesDB", 1);
-
-        request.onupgradeneeded = function(event) {
-            db = event.target.result;
-            if (!db.objectStoreNames.contains("expedientes")) {
-                db.createObjectStore("expedientes", { keyPath: "id", autoIncrement: true });
-            }
-        };
-
-        request.onsuccess = function(event) {
-            db = event.target.result;
-            renderAreas();
-        };
-
-        request.onerror = function() {
-            console.error("Error al abrir la base de datos.");
-        };
-
-        document.getElementById('login-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            if (username === "umecasca@gmail.com" && password === "2025DEMA") {
-                document.querySelector('.login-container').style.display = 'none';
-                document.getElementById('document-section').style.display = 'block';
-            } else {
-                document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos.';
-            }
-        });
-
-        document.getElementById('uploadForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const area = document.getElementById('area').value;
-            const folderName = document.getElementById('folder').value.trim() || "General";
-            const subfolderName = document.getElementById('subfolder').value.trim() || "Sin subcarpeta";
-            const file = document.getElementById('file').files[0];
-
-            if (!file) {
-                alert("Selecciona un archivo.");
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const fileUrl = event.target.result;
-
-                const transaction = db.transaction(["expedientes"], "readwrite");
-                const store = transaction.objectStore("expedientes");
-
-                const expediente = {
-                    area,
-                    folderName,
-                    subfolderName,
-                    fileName: file.name,
-                    fileUrl
-                };
-
-                store.add(expediente);
-                transaction.oncomplete = () => {
-                    renderAreas();
-                    alert("Expediente guardado.");
-                };
-            };
-            reader.readAsDataURL(file);
-        });
-
-        function renderAreas() {
-            const transaction = db.transaction(["expedientes"], "readonly");
-            const store = transaction.objectStore("expedientes");
-            const request = store.getAll();
-
-            request.onsuccess = function() {
-                const areaList = document.getElementById('areaList');
-                areaList.innerHTML = "";
-
-                request.result.forEach(exp => {
-                    const item = document.createElement('div');
-                    item.classList.add('file-item');
-                    item.textContent = `📄 ${exp.area} > ${exp.folderName} > ${exp.subfolderName} > ${exp.fileName}`;
-                    item.addEventListener('click', function() {
-                        document.getElementById('pdfViewer').src = exp.fileUrl;
-                        document.getElementById('pdfViewer').style.display = 'block';
-                        document.getElementById('savePdfButton').style.display = 'block';
-                    });
-                    areaList.appendChild(item);
-                });
-            };
-        }
-
-        document.getElementById('logout').addEventListener('click', function() {
-            document.querySelector('.login-container').style.display = 'block';
-            document.getElementById('document-section').style.display = 'none';
-        });
-
-    </script>
-
 </body>
 </html>
