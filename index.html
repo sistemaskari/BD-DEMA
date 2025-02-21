@@ -12,6 +12,16 @@
             padding: 20px;
         }
 
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-container img {
+            max-width: 150px;
+            height: auto;
+        }
+
         .login-container, .container {
             max-width: 600px;
             margin: auto;
@@ -62,9 +72,29 @@
             height: 500px;
             display: none;
         }
+
+        .folder-container {
+            text-align: left;
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .folder, .subfolder {
+            margin-left: 10px;
+        }
+
+        .file-item {
+            margin-left: 20px;
+            font-weight: normal;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Logo -->
+    <div class="logo-container">
+        <img src="logo.png" alt="Logo DEMA"> <!-- Cambia "logo.png" por la ruta de tu logo -->
+    </div>
 
     <!-- Inicio de sesión -->
     <div class="login-container">
@@ -111,7 +141,7 @@
         </form>
 
         <h3>Áreas y Documentos</h3>
-        <div id="areaList"></div>
+        <div class="folder-container" id="areaList"></div>
 
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
 
@@ -197,16 +227,16 @@
                 const areaList = document.getElementById('areaList');
                 areaList.innerHTML = "";
 
+                const areas = {};
+
                 request.result.forEach(exp => {
-                    const item = document.createElement('div');
-                    item.classList.add('file-item');
-                    item.textContent = `📄 ${exp.area} > ${exp.folderName} > ${exp.subfolderName} > ${exp.fileName}`;
-                    item.addEventListener('click', function() {
-                        document.getElementById('pdfViewer').src = exp.fileUrl;
-                        document.getElementById('pdfViewer').style.display = 'block';
-                    });
-                    areaList.appendChild(item);
+                    if (!areas[exp.area]) areas[exp.area] = {};
+                    if (!areas[exp.area][exp.folderName]) areas[exp.area][exp.folderName] = {};
+                    if (!areas[exp.area][exp.folderName][exp.subfolderName]) areas[exp.area][exp.folderName][exp.subfolderName] = [];
+                    areas[exp.area][exp.folderName][exp.subfolderName].push(exp);
                 });
+
+                console.log(areas);
             };
         }
 
