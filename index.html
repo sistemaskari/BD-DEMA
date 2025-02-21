@@ -4,9 +4,90 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EXPEDIENTES DEMA - Gestión de Documentos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .login-container, .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        select, input, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .file-item {
+            background: #ddd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pdf-viewer {
+            margin-top: 20px;
+            max-width: 100%;
+            height: 500px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>EXPEDIENTES DEMA</h2>
+        <form id="login-form">
+            <label for="username">Usuario:</label>
+            <input type="text" id="username" required>
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" required>
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+        <p id="error-message"></p>
+    </div>
+
+    <div class="container" id="document-section" style="display:none;">
+        <h2>Gestión de Documentos PDF</h2>
+        <input type="file" id="file" accept="application/pdf">
+        <button id="uploadBtn">Subir PDF</button>
+        <h3>Expedientes Guardados</h3>
+        <div id="pdfList"></div>
+        <iframe id="pdfViewer" class="pdf-viewer"></iframe>
+        <button id="logout">Cerrar Sesión</button>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL, listAll, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCRRDUfJFAEF3c9lly8tOnIinBrkWoONhk",
@@ -24,7 +105,6 @@
             event.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-
             if (username === "umecasca@gmail.com" && password === "2025DEMA") {
                 document.querySelector('.login-container').style.display = 'none';
                 document.getElementById('document-section').style.display = 'block';
@@ -33,94 +113,40 @@
             }
         });
 
-        async function subirPDF() {
-            const fileInput = document.getElementById("uploadPDF");
-            const pdfFile = fileInput.files[0];
-            const area = document.getElementById("area").value;
-            const folder = document.getElementById("folder").value.trim() || "General";
-            const subfolder = document.getElementById("subfolder").value.trim() || "Sin subcarpeta";
-
-            if (!pdfFile) {
-                alert("Selecciona un archivo PDF.");
+        document.getElementById("uploadBtn").addEventListener("click", async () => {
+            const file = document.getElementById("file").files[0];
+            if (!file) {
+                alert("Selecciona un archivo.");
                 return;
             }
-
-            const storageRef = ref(storage, `expedientes/${area}/${folder}/${subfolder}/${pdfFile.name}`);
-
-            try {
-                await uploadBytes(storageRef, pdfFile);
-                alert("PDF subido con éxito.");
-                fileInput.value = "";
-                mostrarPDFs();
-            } catch (error) {
-                console.error("Error al subir el archivo:", error);
-                alert("Error al subir el archivo.");
-            }
-        }
+            const storageRef = ref(storage, `pdfs/${file.name}`);
+            await uploadBytes(storageRef, file);
+            alert("Archivo subido con éxito");
+            mostrarPDFs();
+        });
 
         async function mostrarPDFs() {
-            const storageRef = ref(storage, "expedientes/");
+            const storageRef = ref(storage, "pdfs/");
             const pdfListDiv = document.getElementById("pdfList");
             pdfListDiv.innerHTML = "";
-
-            try {
-                const archivos = await listAll(storageRef);
-                archivos.items.forEach(async (itemRef) => {
-                    const url = await getDownloadURL(itemRef);
-                    const pdfItem = document.createElement("div");
-                    pdfItem.classList.add("file-item");
-                    pdfItem.innerHTML = `<a href="#" onclick="verPDF('${url}');">${itemRef.name}</a>`;
-                    pdfListDiv.appendChild(pdfItem);
-                });
-            } catch (error) {
-                console.error("Error al listar archivos:", error);
-            }
+            const archivos = await listAll(storageRef);
+            archivos.items.forEach(async (itemRef) => {
+                const url = await getDownloadURL(itemRef);
+                const link = document.createElement("a");
+                link.href = url;
+                link.textContent = itemRef.name;
+                link.target = "_blank";
+                pdfListDiv.appendChild(link);
+                pdfListDiv.appendChild(document.createElement("br"));
+            });
         }
 
-        window.verPDF = function (url) {
-            document.getElementById("pdfViewer").src = url;
-            document.getElementById("pdfViewer").style.display = "block";
-        };
+        document.getElementById("logout").addEventListener("click", () => {
+            document.querySelector(".login-container").style.display = "block";
+            document.getElementById("document-section").style.display = "none";
+        });
 
         window.onload = mostrarPDFs;
     </script>
-    <style>
-        /* Tu estilo aquí */
-    </style>
-</head>
-<body>
-    <div class="login-container">
-        <h2>EXPEDIENTES DEMA</h2>
-        <form id="login-form">
-            <label for="username">Usuario:</label>
-            <input type="text" id="username" required>
-            <label for="password">Contraseña:</label>
-            <input type="password" id="password" required>
-            <button type="submit">Iniciar Sesión</button>
-        </form>
-        <p id="error-message" class="error"></p>
-    </div>
-
-    <div class="container" id="document-section" style="display:none;">
-        <h2>Gestión de Documentos PDF</h2>
-        <select id="area">
-            <option value="medica">Área Médica</option>
-            <option value="pedagogia">Pedagogía</option>
-            <option value="criminologia">Criminología</option>
-            <option value="psicologia">Psicología</option>
-            <option value="direccion">Dirección</option>
-            <option value="trabajo_social">Trabajo Social</option>
-            <option value="juridico">Jurídico</option>
-            <option value="horario_actividades">Horario de Actividades</option>
-        </select>
-        <input type="text" id="folder" placeholder="Ejemplo: Expedientes">
-        <input type="text" id="subfolder" placeholder="Ejemplo: Documentos Importantes">
-        <input type="file" id="uploadPDF" accept="application/pdf">
-        <button onclick="subirPDF()">Subir PDF</button>
-        <h3>Expedientes Guardados</h3>
-        <div id="pdfList"></div>
-        <iframe id="pdfViewer" class="pdf-viewer"></iframe>
-    </div>
 </body>
 </html>
-
