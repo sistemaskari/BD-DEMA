@@ -33,12 +33,6 @@
             height: auto;
         }
 
-        form {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
         select, input, button {
             width: 100%;
             margin: 10px 0;
@@ -126,13 +120,12 @@
             <button type="submit">Subir Archivo</button>
         </form>
 
-        <h3>Áreas y Documentos</h3>
-        <div id="areaList"></div>
+        <h3>Archivos Guardados</h3>
+        <div id="fileList"></div>
 
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
 
-        <!-- Botón de guardar PDF y cerrar sesión -->
-        <button id="save-pdf">Guardar PDF</button>
+        <!-- Botón de cerrar sesión -->
         <button id="logout">Cerrar Sesión</button>
     </div>
 
@@ -146,6 +139,7 @@
                 document.querySelector('.login-container').style.display = 'none';
                 document.getElementById('document-section').style.display = 'block';
                 localStorage.setItem('loggedIn', 'true');
+                loadFiles();
             } else {
                 document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos.';
             }
@@ -181,6 +175,7 @@
                             name: file.name,
                             url: event.target.result
                         });
+                        loadFiles();
                     };
                     reader.readAsDataURL(file);
                 });
@@ -189,22 +184,47 @@
             };
         });
 
-        document.getElementById('save-pdf').addEventListener('click', function() {
-            const pdfViewer = document.getElementById('pdfViewer');
-            if (pdfViewer.src && pdfViewer.src !== "about:blank") {
-                alert('PDF guardado correctamente.');
-            } else {
-                alert('Por favor, visualiza un PDF antes de guardarlo.');
-            }
-        });
+        function loadFiles() {
+            const dbRequest = indexedDB.open("ExpedientesDB", 1);
+
+            dbRequest.onsuccess = function(event) {
+                const db = event.target.result;
+                const transaction = db.transaction(["expedientes"], "readonly");
+                const store = transaction.objectStore("expedientes");
+                const request = store.getAll();
+
+                request.onsuccess = function() {
+                    const fileList = document.getElementById('fileList');
+                    fileList.innerHTML = '';
+
+                    request.result.forEach(file => {
+                        const fileItem = document.createElement('div');
+                        fileItem.textContent = `${file.folder}/${file.subfolder} - ${file.name}`;
+                        fileItem.classList.add('file-item');
+                        fileItem.addEventListener('click', function() {
+                            document.getElementById('pdfViewer').src = file.url;
+                            document.getElementById('pdfViewer').style.display = 'block';
+                        });
+                        fileList.appendChild(fileItem);
+                    });
+                };
+            };
+        }
 
         document.getElementById('logout').addEventListener('click', function() {
             localStorage.removeItem('loggedIn');
             document.querySelector('.login-container').style.display = 'block';
             document.getElementById('document-section').style.display = 'none';
         });
+
+        window.onload = function() {
+            if (localStorage.getItem('loggedIn')) {
+                document.querySelector('.login-container').style.display = 'none';
+                document.getElementById('document-section').style.display = 'block';
+                loadFiles();
+            }
+        };
     </script>
 
 </body>
 </html>
-
