@@ -11,7 +11,6 @@
             text-align: center;
             padding: 20px;
         }
-
         .login-container, .container {
             max-width: 600px;
             margin: auto;
@@ -20,40 +19,28 @@
             border-radius: 8px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
-
-        h2 {
-            color: #333;
-        }
-
+        h2 { color: #333; }
         select, input, button {
             width: 100%;
             margin: 10px 0;
             padding: 8px;
             font-size: 16px;
         }
-
         button {
             background-color: #007bff;
             color: white;
             border: none;
             cursor: pointer;
         }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
+        button:hover { background-color: #0056b3; }
         .file-item {
             background: #ddd;
             padding: 10px;
             margin: 5px 0;
             border-radius: 5px;
             cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            font-weight: bold;
         }
-
         .pdf-viewer {
             margin-top: 20px;
             max-width: 100%;
@@ -72,35 +59,31 @@
             <input type="password" id="password" required>
             <button type="submit">Iniciar Sesión</button>
         </form>
-        <p id="error-message"></p>
+        <p id="error-message" class="error"></p>
     </div>
-
     <div class="container" id="document-section" style="display:none;">
         <h2>Gestión de Documentos PDF</h2>
-        <input type="file" id="file" accept="application/pdf">
-        <button id="uploadBtn">Subir PDF</button>
+        <label for="uploadPDF">Selecciona un PDF:</label>
+        <input type="file" id="uploadPDF" accept="application/pdf">
+        <button onclick="subirPDF()">Subir PDF</button>
         <h3>Expedientes Guardados</h3>
         <div id="pdfList"></div>
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
         <button id="logout">Cerrar Sesión</button>
     </div>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getStorage, ref, uploadBytes, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
         const firebaseConfig = {
-            apiKey: "AIzaSyCRRDUfJFAEF3c9lly8tOnIinBrkWoONhk",
+            apiKey: "AIzaSyCRRDU...", // Tu API Key
             authDomain: "dema-expedientes.firebaseapp.com",
             projectId: "dema-expedientes",
             storageBucket: "dema-expedientes.appspot.com",
             messagingSenderId: "606027989070",
             appId: "1:606027989070:web:20965dbcf1d38ba6dc031f"
         };
-
         const app = initializeApp(firebaseConfig);
         const storage = getStorage(app);
-
         document.getElementById('login-form').addEventListener('submit', function(event) {
             event.preventDefault();
             const username = document.getElementById('username').value;
@@ -112,41 +95,44 @@
                 document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos.';
             }
         });
-
-        document.getElementById("uploadBtn").addEventListener("click", async () => {
-            const file = document.getElementById("file").files[0];
-            if (!file) {
-                alert("Selecciona un archivo.");
-                return;
+        async function subirPDF() {
+            const fileInput = document.getElementById("uploadPDF");
+            const pdfFile = fileInput.files[0];
+            if (!pdfFile) { alert("Selecciona un archivo PDF."); return; }
+            const storageRef = ref(storage, `pdfs/${pdfFile.name}`);
+            try {
+                await uploadBytes(storageRef, pdfFile);
+                alert("PDF subido con éxito.");
+                mostrarPDFs();
+            } catch (error) {
+                console.error("Error al subir el archivo:", error);
+                alert("Hubo un error al subir el archivo.");
             }
-            const storageRef = ref(storage, `pdfs/${file.name}`);
-            await uploadBytes(storageRef, file);
-            alert("Archivo subido con éxito");
-            mostrarPDFs();
-        });
-
+        }
         async function mostrarPDFs() {
             const storageRef = ref(storage, "pdfs/");
             const pdfListDiv = document.getElementById("pdfList");
             pdfListDiv.innerHTML = "";
-            const archivos = await listAll(storageRef);
-            archivos.items.forEach(async (itemRef) => {
-                const url = await getDownloadURL(itemRef);
-                const link = document.createElement("a");
-                link.href = url;
-                link.textContent = itemRef.name;
-                link.target = "_blank";
-                pdfListDiv.appendChild(link);
-                pdfListDiv.appendChild(document.createElement("br"));
-            });
+            try {
+                const archivos = await listAll(storageRef);
+                archivos.items.forEach(async (itemRef) => {
+                    const url = await getDownloadURL(itemRef);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.textContent = itemRef.name;
+                    link.target = "_blank";
+                    pdfListDiv.appendChild(link);
+                    pdfListDiv.appendChild(document.createElement("br"));
+                });
+            } catch (error) {
+                console.error("Error al listar archivos:", error);
+            }
         }
-
-        document.getElementById("logout").addEventListener("click", () => {
-            document.querySelector(".login-container").style.display = "block";
-            document.getElementById("document-section").style.display = "none";
-        });
-
         window.onload = mostrarPDFs;
+        document.getElementById('logout').addEventListener('click', function() {
+            document.querySelector('.login-container').style.display = 'block';
+            document.getElementById('document-section').style.display = 'none';
+        });
     </script>
 </body>
 </html>
