@@ -12,17 +12,7 @@
             padding: 20px;
         }
 
-        .logo-container {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .logo-container img {
-            max-width: 150px;
-            height: auto;
-        }
-
-        .login-container, .container {
+        .container {
             max-width: 600px;
             margin: auto;
             background: white;
@@ -31,8 +21,19 @@
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
 
+        .logo-container {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .logo-container img {
+            max-width: 120px;
+            height: auto;
+        }
+
         h2 {
             color: #333;
+            margin-top: 10px;
         }
 
         select, input, button {
@@ -51,6 +52,12 @@
 
         button:hover {
             background-color: #0056b3;
+        }
+
+        .folder-container {
+            text-align: left;
+            max-width: 600px;
+            margin: auto;
         }
 
         .folder, .subfolder, .file-item {
@@ -72,80 +79,66 @@
             height: 500px;
             display: none;
         }
-
-        .folder-container {
-            text-align: left;
-            max-width: 600px;
-            margin: auto;
-        }
-
-        .folder, .subfolder {
-            margin-left: 10px;
-        }
-
-        .file-item {
-            margin-left: 20px;
-            font-weight: normal;
-        }
     </style>
 </head>
 <body>
 
-    <!-- Logo -->
-    <div class="logo-container">
-        <img src="logo.png" alt="Logo DEMA"> <!-- Cambia "logo.png" por la ruta de tu logo -->
-    </div>
+    <div class="container">
+        <!-- Logo dentro de la ventana -->
+        <div class="logo-container">
+            <img src="logo.png" alt="Logo DEMA"> <!-- Cambia "logo.png" por la ruta de tu logo -->
+        </div>
 
-    <!-- Inicio de sesión -->
-    <div class="login-container">
         <h2>EXPEDIENTES DEMA</h2>
-        <form id="login-form">
-            <label for="username">Usuario:</label>
-            <input type="text" id="username" required>
-            
-            <label for="password">Contraseña:</label>
-            <input type="password" id="password" required>
-            
-            <button type="submit">Iniciar Sesión</button>
-        </form>
-        <p id="error-message" class="error"></p>
-    </div>
 
-    <!-- Gestión de Documentos PDF -->
-    <div class="container" id="document-section" style="display:none;">
-        <h2>Gestión de Documentos PDF</h2>
+        <!-- Inicio de sesión -->
+        <div id="login-section">
+            <form id="login-form">
+                <label for="username">Usuario:</label>
+                <input type="text" id="username" required>
+                
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" required>
+                
+                <button type="submit">Iniciar Sesión</button>
+            </form>
+            <p id="error-message" class="error"></p>
+        </div>
 
-        <form id="uploadForm">
-            <label for="area">Selecciona el Área:</label>
-            <select id="area">
-                <option value="medica">Área Médica</option>
-                <option value="pedagogia">Pedagogía</option>
-                <option value="criminologia">Criminología</option>
-                <option value="psicologia">Psicología</option>
-                <option value="direccion">Dirección</option>
-                <option value="trabajo_social">Trabajo Social</option>
-                <option value="juridico">Jurídico</option>
-                <option value="horario_actividades">Horario de Actividades</option>
-            </select>
+        <!-- Gestión de Documentos PDF -->
+        <div id="document-section" style="display:none;">
+            <form id="uploadForm">
+                <label for="area">Selecciona el Área:</label>
+                <select id="area">
+                    <option value="medica">Área Médica</option>
+                    <option value="pedagogia">Pedagogía</option>
+                    <option value="criminologia">Criminología</option>
+                    <option value="psicologia">Psicología</option>
+                    <option value="direccion">Dirección</option>
+                    <option value="trabajo_social">Trabajo Social</option>
+                    <option value="juridico">Jurídico</option>
+                    <option value="horario_actividades">Horario de Actividades</option>
+                </select>
 
-            <label for="folder">Nombre de la Carpeta:</label>
-            <input type="text" id="folder" placeholder="Ejemplo: Expedientes">
+                <label for="folder">Nombre de la Carpeta:</label>
+                <input type="text" id="folder" placeholder="Ejemplo: Expedientes">
 
-            <label for="subfolder">Nombre de la Subcarpeta:</label>
-            <input type="text" id="subfolder" placeholder="Ejemplo: Documentos Importantes">
+                <label for="subfolder">Nombre de la Subcarpeta:</label>
+                <input type="text" id="subfolder" placeholder="Ejemplo: Documentos Importantes">
 
-            <label for="file">Selecciona el Archivo:</label>
-            <input type="file" id="file" accept="application/pdf" required>
+                <label for="file">Selecciona el Archivo:</label>
+                <input type="file" id="file" accept="application/pdf" required>
 
-            <button type="submit">Subir Archivo</button>
-        </form>
+                <button type="submit">Subir Archivo</button> <!-- Ya aparece el botón -->
+            </form>
 
-        <h3>Áreas y Documentos</h3>
-        <div class="folder-container" id="areaList"></div>
+            <h3>Áreas y Documentos</h3>
+            <div class="folder-container" id="areaList"></div>
 
-        <iframe id="pdfViewer" class="pdf-viewer"></iframe>
+            <iframe id="pdfViewer" class="pdf-viewer"></iframe>
 
-        <button id="logout">Cerrar Sesión</button>
+            <button id="logout">Cerrar Sesión</button>
+        </div>
     </div>
 
     <script>
@@ -174,7 +167,7 @@
             const password = document.getElementById('password').value;
 
             if (username === "umecasca@gmail.com" && password === "2025DEMA") {
-                document.querySelector('.login-container').style.display = 'none';
+                document.getElementById('login-section').style.display = 'none';
                 document.getElementById('document-section').style.display = 'block';
             } else {
                 document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos.';
@@ -241,7 +234,7 @@
         }
 
         document.getElementById('logout').addEventListener('click', function() {
-            document.querySelector('.login-container').style.display = 'block';
+            document.getElementById('login-section').style.display = 'block';
             document.getElementById('document-section').style.display = 'none';
         });
 
@@ -249,3 +242,4 @@
 
 </body>
 </html>
+
