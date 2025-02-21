@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EXPEDIENTES DEMA - Gestión de Documentos</title>
-    <link rel="stylesheet" href="styles.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,6 +11,7 @@
             text-align: center;
             padding: 20px;
         }
+
         .login-container, .container {
             max-width: 600px;
             margin: auto;
@@ -20,14 +20,36 @@
             border-radius: 8px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
+
+        .logo {
+            width: 100px;
+            display: block;
+            margin: 0 auto 10px;
+        }
+
         h2 {
             color: #333;
         }
-        .logo {
-            display: block;
-            margin: 0 auto 15px;
-            width: 120px;
+
+        select, input, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 8px;
+            font-size: 16px;
         }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
         .folder, .subfolder, .file-item {
             background: #ddd;
             padding: 10px;
@@ -37,27 +59,16 @@
             font-weight: bold;
             text-align: left;
         }
+
         .folder:hover, .subfolder:hover, .file-item:hover {
             background: #bbb;
         }
+
         .pdf-viewer {
             margin-top: 20px;
             max-width: 100%;
             height: 500px;
             display: none;
-        }
-        button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            cursor: pointer;
-            padding: 10px;
-            width: 100%;
-            margin-top: 10px;
-            border-radius: 5px;
-        }
-        button:hover {
-            background-color: #0056b3;
         }
     </style>
 </head>
@@ -70,8 +81,10 @@
         <form id="login-form">
             <label for="username">Usuario:</label>
             <input type="text" id="username" required>
+            
             <label for="password">Contraseña:</label>
             <input type="password" id="password" required>
+            
             <button type="submit">Iniciar Sesión</button>
         </form>
         <p id="error-message" class="error"></p>
@@ -124,14 +137,32 @@
 
         request.onupgradeneeded = function(event) {
             db = event.target.result;
-            const store = db.createObjectStore("expedientes", { keyPath: "id", autoIncrement: true });
-            store.createIndex("area", "area", { unique: false });
+            if (!db.objectStoreNames.contains("expedientes")) {
+                db.createObjectStore("expedientes", { keyPath: "id", autoIncrement: true });
+            }
         };
 
         request.onsuccess = function(event) {
             db = event.target.result;
-            cargarExpedientes();
+            renderAreas();
         };
+
+        request.onerror = function() {
+            console.error("Error al abrir la base de datos.");
+        };
+
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === "umecasca@gmail.com" && password === "2025DEMA") {
+                document.querySelector('.login-container').style.display = 'none';
+                document.getElementById('document-section').style.display = 'block';
+            } else {
+                document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos.';
+            }
+        });
 
         document.getElementById('uploadForm').addEventListener('submit', function(event) {
             event.preventDefault();
@@ -139,9 +170,9 @@
             const area = document.getElementById('area').value;
             const folderName = document.getElementById('folder').value.trim() || "General";
             const subfolderName = document.getElementById('subfolder').value.trim() || "Sin subcarpeta";
-            const fileInput = document.getElementById('file').files[0];
+            const file = document.getElementById('file').files[0];
 
-            if (!fileInput) {
+            if (!file) {
                 alert("Selecciona un archivo.");
                 return;
             }
@@ -149,16 +180,28 @@
             const reader = new FileReader();
             reader.onload = function(event) {
                 const fileUrl = event.target.result;
+
                 const transaction = db.transaction(["expedientes"], "readwrite");
                 const store = transaction.objectStore("expedientes");
 
-                store.add({ area, folderName, subfolderName, name: fileInput.name, url: fileUrl });
-                cargarExpedientes();
+                const expediente = {
+                    area,
+                    folderName,
+                    subfolderName,
+                    fileName: file.name,
+                    fileUrl
+                };
+
+                store.add(expediente);
+                transaction.oncomplete = () => {
+                    renderAreas();
+                    alert("Expediente guardado.");
+                };
             };
-            reader.readAsDataURL(fileInput);
+            reader.readAsDataURL(file);
         });
 
-        function cargarExpedientes() {
+        function renderAreas() {
             const transaction = db.transaction(["expedientes"], "readonly");
             const store = transaction.objectStore("expedientes");
             const request = store.getAll();
@@ -167,36 +210,26 @@
                 const areaList = document.getElementById('areaList');
                 areaList.innerHTML = "";
 
-                request.result.forEach(file => {
-                    const fileItem = document.createElement("div");
-                    fileItem.classList.add("file-item");
-                    fileItem.textContent = `${file.folderName} > ${file.subfolderName} > ${file.name}`;
-                    fileItem.setAttribute("data-url", file.url);
-
-                    fileItem.addEventListener("click", function() {
-                        document.getElementById('pdfViewer').src = file.url;
+                request.result.forEach(exp => {
+                    const item = document.createElement('div');
+                    item.classList.add('file-item');
+                    item.textContent = `📄 ${exp.area} > ${exp.folderName} > ${exp.subfolderName} > ${exp.fileName}`;
+                    item.addEventListener('click', function() {
+                        document.getElementById('pdfViewer').src = exp.fileUrl;
                         document.getElementById('pdfViewer').style.display = 'block';
                         document.getElementById('savePdfButton').style.display = 'block';
-                        document.getElementById('savePdfButton').setAttribute("data-url", file.url);
                     });
-
-                    areaList.appendChild(fileItem);
+                    areaList.appendChild(item);
                 });
             };
         }
-
-        document.getElementById('savePdfButton').addEventListener('click', function() {
-            const fileUrl = this.getAttribute('data-url');
-            const link = document.createElement('a');
-            link.href = fileUrl;
-            link.download = "Documento.pdf";
-            link.click();
-        });
 
         document.getElementById('logout').addEventListener('click', function() {
             document.querySelector('.login-container').style.display = 'block';
             document.getElementById('document-section').style.display = 'none';
         });
+
     </script>
+
 </body>
 </html>
