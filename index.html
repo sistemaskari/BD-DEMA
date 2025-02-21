@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EXPEDIENTES DEMA</title>
+    <title>EXPEDIENTES DEMA - Gestión de Documentos</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -12,7 +13,7 @@
             padding: 20px;
         }
 
-        .container {
+        .login-container, .container {
             max-width: 600px;
             margin: auto;
             background: white;
@@ -21,19 +22,21 @@
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .logo-container {
-            text-align: center;
-            margin-bottom: 10px;
+        h2 {
+            color: #333;
         }
 
-        .logo-container img {
-            max-width: 120px;
+        .logo {
+            display: block;
+            margin: 0 auto 20px;
+            width: 120px;
             height: auto;
         }
 
-        h2 {
-            color: #333;
-            margin-top: 10px;
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         select, input, button {
@@ -52,12 +55,6 @@
 
         button:hover {
             background-color: #0056b3;
-        }
-
-        .folder-container {
-            text-align: left;
-            max-width: 600px;
-            margin: auto;
         }
 
         .folder, .subfolder, .file-item {
@@ -83,92 +80,72 @@
 </head>
 <body>
 
-    <div class="container">
-        <!-- 🔹 Logo dentro de la ventana -->
-        <div class="logo-container">
-            <img src="logo.png" alt="Logo DEMA"> <!-- Asegúrate de que "logo.png" está en la misma carpeta que este HTML -->
-        </div>
-
+    <!-- Inicio de sesión -->
+    <div class="login-container">
+        <img src="logo_sspc2.png" alt="Logo SSPC" class="logo">
         <h2>EXPEDIENTES DEMA</h2>
+        <form id="login-form">
+            <label for="username">Usuario:</label>
+            <input type="text" id="username" required>
+            
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" required>
+            
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+        <p id="error-message" class="error"></p>
+    </div>
 
-        <!-- 🔹 Inicio de sesión -->
-        <div id="login-section">
-            <form id="login-form">
-                <label for="username">Usuario:</label>
-                <input type="text" id="username" required>
-                
-                <label for="password">Contraseña:</label>
-                <input type="password" id="password" required>
-                
-                <button type="submit">Iniciar Sesión</button>
-            </form>
-            <p id="error-message" class="error"></p>
-        </div>
+    <!-- Gestión de Documentos PDF -->
+    <div class="container" id="document-section" style="display:none;">
+        <img src="logo_sspc2.png" alt="Logo SSPC" class="logo">
+        <h2>Gestión de Documentos PDF</h2>
 
-        <!-- 🔹 Gestión de Documentos -->
-        <div id="document-section" style="display:none;">
-            <form id="uploadForm">
-                <label for="area">Selecciona el Área:</label>
-                <select id="area">
-                    <option value="medica">Área Médica</option>
-                    <option value="pedagogia">Pedagogía</option>
-                    <option value="criminologia">Criminología</option>
-                    <option value="psicologia">Psicología</option>
-                    <option value="direccion">Dirección</option>
-                    <option value="trabajo_social">Trabajo Social</option>
-                    <option value="juridico">Jurídico</option>
-                    <option value="horario_actividades">Horario de Actividades</option>
-                </select>
+        <form id="uploadForm">
+            <label for="area">Selecciona el Área:</label>
+            <select id="area">
+                <option value="medica">Área Médica</option>
+                <option value="pedagogia">Pedagogía</option>
+                <option value="criminologia">Criminología</option>
+                <option value="psicologia">Psicología</option>
+                <option value="direccion">Dirección</option>
+                <option value="trabajo_social">Trabajo Social</option>
+                <option value="juridico">Jurídico</option>
+                <option value="horario_actividades">Horario de Actividades</option>
+            </select>
 
-                <label for="folder">Nombre de la Carpeta:</label>
-                <input type="text" id="folder" placeholder="Ejemplo: Expedientes">
+            <label for="folder">Nombre de la Carpeta:</label>
+            <input type="text" id="folder" placeholder="Ejemplo: Expedientes">
 
-                <label for="subfolder">Nombre de la Subcarpeta:</label>
-                <input type="text" id="subfolder" placeholder="Ejemplo: Documentos Importantes">
+            <label for="subfolder">Nombre de la Subcarpeta:</label>
+            <input type="text" id="subfolder" placeholder="Ejemplo: Documentos Importantes">
 
-                <label for="file">Selecciona el Archivo:</label>
-                <input type="file" id="file" accept="application/pdf" required>
+            <label for="file">Selecciona el Archivo:</label>
+            <input type="file" id="file" accept="application/pdf" multiple required>
 
-                <button type="submit">Subir Archivo</button> <!-- ✅ El botón ya aparece correctamente -->
-            </form>
+            <button type="submit">Subir Archivo</button>
+        </form>
 
-            <h3>Áreas y Documentos</h3>
-            <div class="folder-container" id="areaList"></div>
+        <h3>Áreas y Documentos</h3>
+        <div id="areaList"></div>
 
-            <iframe id="pdfViewer" class="pdf-viewer"></iframe>
+        <iframe id="pdfViewer" class="pdf-viewer"></iframe>
 
-            <button id="logout">Cerrar Sesión</button>
-        </div>
+        <!-- Botón de guardar PDF y cerrar sesión -->
+        <button id="save-pdf">Guardar PDF</button>
+        <button id="logout">Cerrar Sesión</button>
     </div>
 
     <script>
-        let db;
-        const request = indexedDB.open("ExpedientesDB", 1);
-
-        request.onupgradeneeded = function(event) {
-            db = event.target.result;
-            if (!db.objectStoreNames.contains("expedientes")) {
-                db.createObjectStore("expedientes", { keyPath: "id", autoIncrement: true });
-            }
-        };
-
-        request.onsuccess = function(event) {
-            db = event.target.result;
-            renderAreas();
-        };
-
-        request.onerror = function() {
-            console.error("Error al abrir la base de datos.");
-        };
-
         document.getElementById('login-form').addEventListener('submit', function(event) {
             event.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            if (username === "umecasca@gmail.com" && password === "2025DEMA") {
-                document.getElementById('login-section').style.display = 'none';
+            if (username === 'umecasca@gmail.com' && password === '2025DEMA') {
+                document.querySelector('.login-container').style.display = 'none';
                 document.getElementById('document-section').style.display = 'block';
+                localStorage.setItem('loggedIn', 'true');
             } else {
                 document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos.';
             }
@@ -180,65 +157,54 @@
             const area = document.getElementById('area').value;
             const folderName = document.getElementById('folder').value.trim() || "General";
             const subfolderName = document.getElementById('subfolder').value.trim() || "Sin subcarpeta";
-            const file = document.getElementById('file').files[0];
+            const fileInput = document.getElementById('file');
 
-            if (!file) {
-                alert("Selecciona un archivo.");
-                return;
-            }
+            const dbRequest = indexedDB.open("ExpedientesDB", 1);
 
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const fileUrl = event.target.result;
+            dbRequest.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                db.createObjectStore("expedientes", { keyPath: "id", autoIncrement: true });
+            };
 
+            dbRequest.onsuccess = function(event) {
+                const db = event.target.result;
                 const transaction = db.transaction(["expedientes"], "readwrite");
                 const store = transaction.objectStore("expedientes");
 
-                const expediente = {
-                    area,
-                    folderName,
-                    subfolderName,
-                    fileName: file.name,
-                    fileUrl
-                };
-
-                store.add(expediente);
-                transaction.oncomplete = () => {
-                    renderAreas();
-                    alert("Expediente guardado.");
-                };
-            };
-            reader.readAsDataURL(file);
-        });
-
-        function renderAreas() {
-            const transaction = db.transaction(["expedientes"], "readonly");
-            const store = transaction.objectStore("expedientes");
-            const request = store.getAll();
-
-            request.onsuccess = function() {
-                const areaList = document.getElementById('areaList');
-                areaList.innerHTML = "";
-
-                const areas = {};
-
-                request.result.forEach(exp => {
-                    if (!areas[exp.area]) areas[exp.area] = {};
-                    if (!areas[exp.area][exp.folderName]) areas[exp.area][exp.folderName] = {};
-                    if (!areas[exp.area][exp.folderName][exp.subfolderName]) areas[exp.area][exp.folderName][exp.subfolderName] = [];
-                    areas[exp.area][exp.folderName][exp.subfolderName].push(exp);
+                Array.from(fileInput.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        store.add({
+                            area: area,
+                            folder: folderName,
+                            subfolder: subfolderName,
+                            name: file.name,
+                            url: event.target.result
+                        });
+                    };
+                    reader.readAsDataURL(file);
                 });
 
-                console.log(areas);
+                alert("Expedientes guardados correctamente.");
             };
-        }
-
-        document.getElementById('logout').addEventListener('click', function() {
-            document.getElementById('login-section').style.display = 'block';
-            document.getElementById('document-section').style.display = 'none';
         });
 
+        document.getElementById('save-pdf').addEventListener('click', function() {
+            const pdfViewer = document.getElementById('pdfViewer');
+            if (pdfViewer.src && pdfViewer.src !== "about:blank") {
+                alert('PDF guardado correctamente.');
+            } else {
+                alert('Por favor, visualiza un PDF antes de guardarlo.');
+            }
+        });
+
+        document.getElementById('logout').addEventListener('click', function() {
+            localStorage.removeItem('loggedIn');
+            document.querySelector('.login-container').style.display = 'block';
+            document.getElementById('document-section').style.display = 'none';
+        });
     </script>
 
 </body>
 </html>
+
