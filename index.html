@@ -6,7 +6,6 @@
     <title>EXPEDIENTES DEMA - Gestión de Documentos</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        /* Estilos previos */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
@@ -50,89 +49,127 @@
         button:hover {
             background-color: #0056b3;
         }
-
-        .pdf-viewer {
-            margin-top: 20px;
-            max-width: 100%;
-            height: 500px;
-            display: none;
-        }
     </style>
 </head>
 <body>
+    <div class="login-container">
+        <h2>EXPEDIENTES DEMA</h2>
+        <form id="login-form">
+            <label for="username">Usuario:</label>
+            <input type="text" id="username" required>
+            <label for="password">Contraseña:</label>
+            <input type="password" id="password" required>
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+        <p id="error-message" class="error"></p>
+    </div>
+
+    <div class="container" id="document-section" style="display:none;">
+        <h2>Gestión de Documentos PDF</h2>
+        <form id="uploadForm">
+            <label for="area">Selecciona el Área:</label>
+            <select id="area">
+                <option value="medica">Área Médica</option>
+                <option value="pedagogia">Pedagogía</option>
+                <option value="criminologia">Criminología</option>
+                <option value="psicologia">Psicología</option>
+                <option value="direccion">Dirección</option>
+                <option value="trabajo_social">Trabajo Social</option>
+                <option value="juridico">Jurídico</option>
+                <option value="horario_actividades">Horario de Actividades</option>
+            </select>
+            <label for="folder">Nombre de la Carpeta (Opcional):</label>
+            <input type="text" id="folder" placeholder="Ejemplo: Expedientes">
+            <label for="subfolder">Nombre de la Subcarpeta (Opcional):</label>
+            <input type="text" id="subfolder" placeholder="Ejemplo: Documentos Importantes">
+            <label for="file">Selecciona el Archivo:</label>
+            <input type="file" id="file" accept="application/pdf" multiple required>
+            <button type="submit">Subir Archivo</button>
+        </form>
+        <div id="areaList" class="area-section"></div>
+        <iframe id="pdfViewer" class="pdf-viewer"></iframe>
+        <button id="logout">Cerrar Sesión</button>
+    </div>
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            let areas = JSON.parse(localStorage.getItem('areas')) || {};
-            
-            function renderAreas() {
-                const areaList = document.getElementById('areaList');
-                areaList.innerHTML = "";
-                for (const area in areas) {
-                    const areaDiv = document.createElement('div');
-                    areaDiv.innerHTML = `<h3>${area}</h3>`;
-                    for (const folder in areas[area]) {
-                        const folderDiv = document.createElement('div');
-                        folderDiv.textContent = `📁 ${folder}`;
-                        for (const subfolder in areas[area][folder]) {
-                            const subfolderDiv = document.createElement('div');
-                            subfolderDiv.textContent = `📂 ${subfolder}`;
-                            areas[area][folder][subfolder].forEach(file => {
-                                const fileItem = document.createElement('div');
-                                fileItem.textContent = `📄 ${file.name}`;
-                                fileItem.onclick = () => {
-                                    document.getElementById('pdfViewer').src = file.url;
-                                    document.getElementById('pdfViewer').style.display = 'block';
-                                };
-                                subfolderDiv.appendChild(fileItem);
-                            });
-                            folderDiv.appendChild(subfolderDiv);
-                        }
-                        areaDiv.appendChild(folderDiv);
-                    }
-                    areaList.appendChild(areaDiv);
-                }
-            }
-            
-            function loadStoredDocuments() {
-                areas = JSON.parse(localStorage.getItem('areas')) || {};
-                renderAreas();
-            }
-            
-            document.getElementById('uploadForm').addEventListener('submit', function(event) {
-                event.preventDefault();
-                const area = document.getElementById('area').value;
-                const folderName = document.getElementById('folder').value.trim() || "General";
-                const subfolderName = document.getElementById('subfolder').value.trim() || "Sin subcarpeta";
-                const fileInput = document.getElementById('file');
-                const files = fileInput.files;
-                if (!files.length) return alert("Selecciona al menos un archivo.");
-                if (!areas[area]) areas[area] = {};
-                if (!areas[area][folderName]) areas[area][folderName] = {};
-                if (!areas[area][folderName][subfolderName]) areas[area][folderName][subfolderName] = [];
-                Array.from(files).forEach(file => {
-                    const reader = new FileReader();
-                    reader.onload = function(event) {
-                        areas[area][folderName][subfolderName].push({ name: file.name, url: event.target.result });
-                        localStorage.setItem('areas', JSON.stringify(areas));
-                        renderAreas();
-                    };
-                    reader.readAsDataURL(file);
-                });
-                fileInput.value = "";
-            });
-            
-            document.getElementById('logout').addEventListener('click', function() {
-                localStorage.removeItem('loggedIn');
-                document.querySelector('.login-container').style.display = 'block';
-                document.getElementById('document-section').style.display = 'none';
-            });
-            
-            if (localStorage.getItem('loggedIn') === 'true') {
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const validUser = 'umecasca@gmail.com';
+            const validPassword = '2025DEMA';
+            if (username === validUser && password === validPassword) {
                 document.querySelector('.login-container').style.display = 'none';
                 document.getElementById('document-section').style.display = 'block';
-                loadStoredDocuments();
+                localStorage.setItem('loggedIn', 'true');
+            } else {
+                document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos.';
             }
         });
+        
+        let areas = JSON.parse(localStorage.getItem('areas')) || {};
+        function renderAreas() {
+            const areaList = document.getElementById('areaList');
+            areaList.innerHTML = "";
+            for (const area in areas) {
+                const areaDiv = document.createElement('div');
+                areaDiv.innerHTML = `<h3>${area}</h3>`;
+                for (const folder in areas[area]) {
+                    const folderDiv = document.createElement('div');
+                    folderDiv.textContent = `📁 ${folder}`;
+                    for (const subfolder in areas[area][folder]) {
+                        const subfolderDiv = document.createElement('div');
+                        subfolderDiv.textContent = `📂 ${subfolder}`;
+                        areas[area][folder][subfolder].forEach(file => {
+                            const fileItem = document.createElement('div');
+                            fileItem.textContent = `📄 ${file.name}`;
+                            fileItem.onclick = () => {
+                                document.getElementById('pdfViewer').src = file.url;
+                                document.getElementById('pdfViewer').style.display = 'block';
+                            };
+                            subfolderDiv.appendChild(fileItem);
+                        });
+                        folderDiv.appendChild(subfolderDiv);
+                    }
+                    areaDiv.appendChild(folderDiv);
+                }
+                areaList.appendChild(areaDiv);
+            }
+        }
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const area = document.getElementById('area').value;
+            const folderName = document.getElementById('folder').value.trim() || "General";
+            const subfolderName = document.getElementById('subfolder').value.trim() || "Sin subcarpeta";
+            const fileInput = document.getElementById('file');
+            const files = fileInput.files;
+            if (!files.length) return alert("Selecciona al menos un archivo.");
+            if (!areas[area]) areas[area] = {};
+            if (!areas[area][folderName]) areas[area][folderName] = {};
+            if (!areas[area][folderName][subfolderName]) areas[area][folderName][subfolderName] = [];
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    areas[area][folderName][subfolderName].push({ name: file.name, url: event.target.result });
+                    localStorage.setItem('areas', JSON.stringify(areas));
+                    renderAreas();
+                };
+                reader.readAsDataURL(file);
+            });
+            fileInput.value = "";
+        });
+        
+        document.getElementById('logout').addEventListener('click', function() {
+            localStorage.removeItem('loggedIn');
+            document.querySelector('.login-container').style.display = 'block';
+            document.getElementById('document-section').style.display = 'none';
+        });
+        
+        if (localStorage.getItem('loggedIn') === 'true') {
+            document.querySelector('.login-container').style.display = 'none';
+            document.getElementById('document-section').style.display = 'block';
+            renderAreas();
+        }
     </script>
 </body>
 </html>
