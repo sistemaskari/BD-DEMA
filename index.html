@@ -6,7 +6,6 @@
     <title>EXPEDIENTES DEMA - Gestión de Documentos</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        /* Estilos originales */
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
@@ -57,6 +56,10 @@
         <img src="logo_sspc2.png" alt="Logo SSPC" class="logo">
         <h2>Gestión de Documentos PDF</h2>
         <form id="uploadForm">
+            <label for="folder">Nombre de la Carpeta:</label>
+            <input type="text" id="folder" placeholder="Ejemplo: Expedientes">
+            <label for="subfolder">Nombre de la Subcarpeta:</label>
+            <input type="text" id="subfolder" placeholder="Ejemplo: Documentos Importantes">
             <label for="file">Selecciona el Archivo PDF:</label>
             <input type="file" id="file" accept="application/pdf" multiple required>
             <button type="submit">Subir Archivo</button>
@@ -83,20 +86,28 @@
             }
         });
 
-        let uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
+        let uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || {};
 
         document.getElementById('uploadForm').addEventListener('submit', function(event) {
             event.preventDefault();
+            const folderName = document.getElementById('folder').value.trim() || "General";
+            const subfolderName = document.getElementById('subfolder').value.trim() || "Sin subcarpeta";
             const fileInput = document.getElementById('file');
             const files = fileInput.files;
             if (!files.length) {
                 alert("Por favor, selecciona al menos un archivo PDF.");
                 return;
             }
+            if (!uploadedFiles[folderName]) {
+                uploadedFiles[folderName] = {};
+            }
+            if (!uploadedFiles[folderName][subfolderName]) {
+                uploadedFiles[folderName][subfolderName] = [];
+            }
             Array.from(files).forEach(file => {
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    uploadedFiles.push({ name: file.name, url: event.target.result });
+                    uploadedFiles[folderName][subfolderName].push({ name: file.name, url: event.target.result });
                     renderFileList();
                 };
                 reader.readAsDataURL(file);
@@ -107,16 +118,28 @@
         function renderFileList() {
             const fileList = document.getElementById('fileList');
             fileList.innerHTML = "";
-            uploadedFiles.forEach((file, index) => {
-                const fileItem = document.createElement('div');
-                fileItem.classList.add('file-item');
-                fileItem.textContent = `📄 ${file.name}`;
-                fileItem.addEventListener('click', function() {
-                    document.getElementById('pdfViewer').src = file.url;
-                    document.getElementById('pdfViewer').style.display = 'block';
-                });
-                fileList.appendChild(fileItem);
-            });
+            for (const folder in uploadedFiles) {
+                const folderDiv = document.createElement('div');
+                folderDiv.classList.add('folder');
+                folderDiv.textContent = `📁 ${folder}`;
+                for (const subfolder in uploadedFiles[folder]) {
+                    const subfolderDiv = document.createElement('div');
+                    subfolderDiv.classList.add('subfolder');
+                    subfolderDiv.textContent = `📂 ${subfolder}`;
+                    uploadedFiles[folder][subfolder].forEach(file => {
+                        const fileItem = document.createElement('div');
+                        fileItem.classList.add('file-item');
+                        fileItem.textContent = `📄 ${file.name}`;
+                        fileItem.addEventListener('click', function() {
+                            document.getElementById('pdfViewer').src = file.url;
+                            document.getElementById('pdfViewer').style.display = 'block';
+                        });
+                        subfolderDiv.appendChild(fileItem);
+                    });
+                    folderDiv.appendChild(subfolderDiv);
+                }
+                fileList.appendChild(folderDiv);
+            }
         }
 
         document.getElementById('save-pdf').addEventListener('click', function() {
@@ -125,20 +148,8 @@
         });
 
         function loadSavedFiles() {
-            uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
+            uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || {};
             renderFileList();
-        }
-
-        document.getElementById('logout').addEventListener('click', function() {
-            localStorage.removeItem('loggedIn');
-            document.querySelector('.login-container').style.display = 'block';
-            document.getElementById('document-section').style.display = 'none';
-        });
-
-        if (localStorage.getItem('loggedIn') === 'true') {
-            document.querySelector('.login-container').style.display = 'none';
-            document.getElementById('document-section').style.display = 'block';
-            loadSavedFiles();
         }
     </script>
 </body>
