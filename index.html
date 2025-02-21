@@ -20,52 +20,48 @@
             border-radius: 8px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
-        .logo {
-            display: block;
-            margin: 0 auto;
-            width: 100px;
-            height: 96px;
+        h2 {
+            color: #333;
         }
         .folder, .subfolder, .file-item {
-            cursor: pointer;
+            background: #ddd;
             padding: 10px;
             margin: 5px 0;
             border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
         }
-        .folder { background: #ddd; font-weight: bold; }
-        .subfolder { background: #bbb; }
-        .file-item { background: #f0f0f0; font-size: 14px; }
-        .pdf-viewer { display: none; height: 500px; }
+        .folder:hover, .subfolder:hover, .file-item:hover {
+            background: #bbb;
+        }
+        .pdf-viewer {
+            margin-top: 20px;
+            max-width: 100%;
+            height: 500px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <img src="logo_sspc2.png" alt="Logo SSPC" class="logo">
         <h2>EXPEDIENTES DEMA</h2>
         <form id="login-form">
-            <label for="username">Usuario:</label>
-            <input type="text" id="username" required>
-            <label for="password">Contraseña:</label>
-            <input type="password" id="password" required>
+            <input type="text" id="username" placeholder="Usuario" required>
+            <input type="password" id="password" placeholder="Contraseña" required>
             <button type="submit">Iniciar Sesión</button>
         </form>
         <p id="error-message" class="error"></p>
     </div>
 
     <div class="container" id="document-section" style="display:none;">
-        <img src="logo_sspc2.png" alt="Logo SSPC" class="logo">
         <h2>Gestión de Documentos PDF</h2>
         <form id="uploadForm">
-            <label for="folder">Nombre de la Carpeta:</label>
-            <input type="text" id="folder" placeholder="Ejemplo: Expedientes">
-            <label for="subfolder">Nombre de la Subcarpeta:</label>
-            <input type="text" id="subfolder" placeholder="Ejemplo: Documentos Importantes">
-            <label for="file">Selecciona el Archivo PDF:</label>
+            <input type="text" id="folder" placeholder="Nombre de la Carpeta (Opcional)">
+            <input type="text" id="subfolder" placeholder="Nombre de la Subcarpeta (Opcional)">
             <input type="file" id="file" accept="application/pdf" multiple required>
             <button type="submit">Subir Archivo</button>
         </form>
-        <h3>Documentos Guardados</h3>
-        <div id="fileList"></div>
+        <div id="areaList"></div>
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
         <button id="save-pdf">Guardar PDF</button>
         <button id="logout">Cerrar Sesión</button>
@@ -77,79 +73,102 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             if (username === 'umecasca@gmail.com' && password === '2025DEMA') {
+                localStorage.setItem('loggedIn', 'true');
                 document.querySelector('.login-container').style.display = 'none';
                 document.getElementById('document-section').style.display = 'block';
-                localStorage.setItem('loggedIn', 'true');
-                loadSavedFiles();
+                loadStoredFiles();
             } else {
                 document.getElementById('error-message').textContent = 'Usuario o contraseña incorrectos.';
             }
         });
 
-        let uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || {};
+        let areas = JSON.parse(localStorage.getItem('areas')) || {};
+        function saveToLocalStorage() {
+            localStorage.setItem('areas', JSON.stringify(areas));
+        }
 
         document.getElementById('uploadForm').addEventListener('submit', function(event) {
             event.preventDefault();
-            const folderName = document.getElementById('folder').value.trim() || "General";
-            const subfolderName = document.getElementById('subfolder').value.trim() || "Sin subcarpeta";
-            const fileInput = document.getElementById('file');
-            const files = fileInput.files;
-            if (!files.length) {
-                alert("Por favor, selecciona al menos un archivo PDF.");
-                return;
-            }
-            if (!uploadedFiles[folderName]) {
-                uploadedFiles[folderName] = {};
-            }
-            if (!uploadedFiles[folderName][subfolderName]) {
-                uploadedFiles[folderName][subfolderName] = [];
-            }
+            const folder = document.getElementById('folder').value.trim() || "General";
+            const subfolder = document.getElementById('subfolder').value.trim() || "Sin subcarpeta";
+            const files = document.getElementById('file').files;
+            if (!areas[folder]) areas[folder] = {};
+            if (!areas[folder][subfolder]) areas[folder][subfolder] = [];
             Array.from(files).forEach(file => {
                 const reader = new FileReader();
                 reader.onload = function(event) {
-                    uploadedFiles[folderName][subfolderName].push({ name: file.name, url: event.target.result });
-                    renderFileList();
+                    areas[folder][subfolder].push({ name: file.name, url: event.target.result });
+                    saveToLocalStorage();
+                    renderAreas();
                 };
                 reader.readAsDataURL(file);
             });
-            fileInput.value = "";
+            document.getElementById('file').value = "";
+            document.getElementById('folder').value = "";
+            document.getElementById('subfolder').value = "";
         });
 
-        function renderFileList() {
-            const fileList = document.getElementById('fileList');
-            fileList.innerHTML = "";
-            for (const folder in uploadedFiles) {
+        function renderAreas() {
+            const areaList = document.getElementById('areaList');
+            areaList.innerHTML = "";
+            for (const folder in areas) {
                 const folderDiv = document.createElement('div');
                 folderDiv.classList.add('folder');
                 folderDiv.textContent = `📁 ${folder}`;
-                for (const subfolder in uploadedFiles[folder]) {
+                const folderContent = document.createElement('div');
+                folderContent.style.display = "none";
+                folderDiv.addEventListener('click', () => {
+                    folderContent.style.display = folderContent.style.display === "none" ? "block" : "none";
+                });
+                for (const subfolder in areas[folder]) {
                     const subfolderDiv = document.createElement('div');
                     subfolderDiv.classList.add('subfolder');
                     subfolderDiv.textContent = `📂 ${subfolder}`;
-                    uploadedFiles[folder][subfolder].forEach(file => {
+                    const fileListDiv = document.createElement('div');
+                    fileListDiv.style.display = "none";
+                    subfolderDiv.addEventListener('click', () => {
+                        fileListDiv.style.display = fileListDiv.style.display === "none" ? "block" : "none";
+                    });
+                    areas[folder][subfolder].forEach(file => {
                         const fileItem = document.createElement('div');
                         fileItem.classList.add('file-item');
                         fileItem.textContent = `📄 ${file.name}`;
-                        fileItem.addEventListener('click', function() {
+                        fileItem.addEventListener('click', () => {
                             document.getElementById('pdfViewer').src = file.url;
                             document.getElementById('pdfViewer').style.display = 'block';
                         });
-                        subfolderDiv.appendChild(fileItem);
+                        fileListDiv.appendChild(fileItem);
                     });
-                    folderDiv.appendChild(subfolderDiv);
+                    subfolderDiv.appendChild(fileListDiv);
+                    folderContent.appendChild(subfolderDiv);
                 }
-                fileList.appendChild(folderDiv);
+                areaList.appendChild(folderDiv);
+                areaList.appendChild(folderContent);
             }
         }
 
-        document.getElementById('save-pdf').addEventListener('click', function() {
-            localStorage.setItem('uploadedFiles', JSON.stringify(uploadedFiles));
-            alert('PDFs guardados correctamente.');
+        document.getElementById('save-pdf').addEventListener('click', () => {
+            if (document.getElementById('pdfViewer').src) {
+                alert('PDF guardado correctamente.');
+            } else {
+                alert('No hay ningún PDF para guardar.');
+            }
         });
 
-        function loadSavedFiles() {
-            uploadedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || {};
-            renderFileList();
+        document.getElementById('logout').addEventListener('click', () => {
+            localStorage.removeItem('loggedIn');
+            document.querySelector('.login-container').style.display = 'block';
+            document.getElementById('document-section').style.display = 'none';
+        });
+
+        function loadStoredFiles() {
+            renderAreas();
+        }
+
+        if (localStorage.getItem('loggedIn') === 'true') {
+            document.querySelector('.login-container').style.display = 'none';
+            document.getElementById('document-section').style.display = 'block';
+            loadStoredFiles();
         }
     </script>
 </body>
