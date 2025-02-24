@@ -20,7 +20,7 @@
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
         h2 { color: #333; }
-        select, button, input {
+        select, button {
             width: 100%;
             margin: 10px 0;
             padding: 8px;
@@ -44,27 +44,42 @@
         }
         .pdf-viewer {
             margin-top: 20px;
-            max-width: 100%;
+            width: 100%;
             height: 500px;
-            display: none;
             border: 1px solid #ccc;
+            display: none;
         }
-        .hidden { display: none; }
+        .logo {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+        #login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #main-content {
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <div id="loginContainer" class="container">
-        <img src="logo._sspc2.png" alt="Logo" width="100">
+
+    <!-- LOGIN -->
+    <div id="login-container">
+        <img src="logo.png" alt="Logo" class="logo">
         <h2>Iniciar Sesión</h2>
         <input type="text" id="username" placeholder="Usuario">
         <input type="password" id="password" placeholder="Contraseña">
         <button onclick="login()">Ingresar</button>
     </div>
 
-    <div id="mainContainer" class="container hidden">
+    <!-- CONTENIDO PRINCIPAL -->
+    <div id="main-content" class="container">
         <h2>Gestión de Expedientes</h2>
+
         <label for="area">Selecciona el Área:</label>
-        <select id="area">
+        <select id="area" onchange="mostrarPDFs()">
             <option value="medica">Área Médica</option>
             <option value="pedagogia">Pedagogía</option>
             <option value="criminologia">Criminología</option>
@@ -74,84 +89,99 @@
             <option value="juridico">Jurídico</option>
             <option value="horario_actividades">Horario de Actividades</option>
         </select>
+
         <h3>Expedientes Guardados</h3>
         <div id="pdfList"></div>
+
+        <!-- IFRAME PARA MOSTRAR EL PDF -->
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
+
+        <button onclick="logout()">Cerrar Sesión</button>
     </div>
 
     <script>
+        // Credenciales de acceso
         const validUser = "umecasca@gmail.com";
         const validPass = "2025DEMA";
 
+        // 📌 LISTA DE EXPEDIENTES POR ÁREA
+        const expedientes = {
+            "medica": [
+                { nombre: "Resumen Clínico Trimestral - Herlinda.pdf", url: "https://raw.githubusercontent.com/sistemaskari/BD-DEMA/main/medica/Resumen-Clinico.pdf" },
+                { nombre: "Historia Clínica.pdf", url: "https://raw.githubusercontent.com/sistemaskari/BD-DEMA/main/medica/Historia-Clinica.pdf" }
+            ],
+            "pedagogia": [
+                { nombre: "Informe Educativo.pdf", url: "https://raw.githubusercontent.com/sistemaskari/BD-DEMA/main/pedagogia/Informe-Educativo.pdf" }
+            ],
+            "criminologia": [
+                { nombre: "Evaluación de Riesgo.pdf", url: "https://raw.githubusercontent.com/sistemaskari/BD-DEMA/main/criminologia/Evaluacion-Riesgo.pdf" }
+            ]
+        };
+
+        // 📌 FUNCIÓN PARA MOSTRAR LOS EXPEDIENTES SEGÚN EL ÁREA SELECCIONADA
+        function mostrarPDFs() {
+            const areaSeleccionada = document.getElementById("area").value;
+            const listaPDF = document.getElementById("pdfList");
+            listaPDF.innerHTML = ""; // Limpiar lista
+
+            const archivos = expedientes[areaSeleccionada] || [];
+
+            if (archivos.length === 0) {
+                listaPDF.innerHTML = "<p>No hay archivos disponibles para esta área.</p>";
+                return;
+            }
+
+            archivos.forEach(archivo => {
+                const div = document.createElement("div");
+                div.classList.add("file-item");
+
+                const nombreArchivo = document.createElement("span");
+                nombreArchivo.textContent = archivo.nombre;
+
+                const verBtn = document.createElement("button");
+                verBtn.textContent = "Ver";
+                verBtn.onclick = () => verPDF(archivo.url);
+
+                const downloadBtn = document.createElement("a");
+                downloadBtn.href = archivo.url;
+                downloadBtn.download = archivo.nombre;
+                downloadBtn.textContent = "Descargar";
+                downloadBtn.style.marginLeft = "10px";
+
+                div.appendChild(nombreArchivo);
+                div.appendChild(verBtn);
+                div.appendChild(downloadBtn);
+
+                listaPDF.appendChild(div);
+            });
+        }
+
+        // 📌 FUNCIÓN PARA VISUALIZAR EL PDF EN EL IFRAME
+        function verPDF(url) {
+            const viewer = document.getElementById("pdfViewer");
+            viewer.src = `https://docs.google.com/gview?url=${url}&embedded=true`; // Usa Google Docs Viewer
+            viewer.style.display = "block";
+        }
+
+        // 📌 FUNCIÓN DE LOGIN
         function login() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
 
             if (username === validUser && password === validPass) {
-                document.getElementById("loginContainer").classList.add("hidden");
-                document.getElementById("mainContainer").classList.remove("hidden");
+                document.getElementById("login-container").style.display = "none";
+                document.getElementById("main-content").style.display = "block";
                 mostrarPDFs();
             } else {
                 alert("Usuario o contraseña incorrectos");
             }
         }
 
-        const expedientes = {
-            "medica": [
-                { nombre: "Historia Clínica.pdf", url: "https://github.com/sistemaskari/BD-DEMA/blob/51f7191b597fef0ab518a7cae3df57c3af885280/RESUMEN%20CL%C3%8DNICO%20TRIMESTRAL%20HERLINDA.pdf" },
-                { nombre: "Diagnóstico Médico.pdf", url: "https://github.com/sistemaskari/BD-DEMA/raw/main/medica/Diagnostico-Medico.pdf" }
-            ],
-            "pedagogia": [
-                { nombre: "Informe Educativo.pdf", url: "https://github.com/sistemaskari/BD-DEMA/raw/main/pedagogia/Informe-Educativo.pdf" }
-            ],
-            "criminologia": [
-                { nombre: "Evaluación de Riesgo.pdf", url: "https://github.com/sistemaskari/BD-DEMA/raw/main/criminologia/Evaluacion-Riesgo.pdf" }
-            ]
-        };
-
-        function mostrarPDFs() {
-            const areaSeleccionada = document.getElementById("area").value;
-            const listaPDF = document.getElementById("pdfList");
-            listaPDF.innerHTML = "";
-            
-            const archivos = expedientes[areaSeleccionada] || [];
-            if (archivos.length === 0) {
-                listaPDF.innerHTML = "<p>No hay archivos disponibles para esta área.</p>";
-                return;
-            }
-            
-            archivos.forEach(archivo => {
-                const div = document.createElement("div");
-                div.classList.add("file-item");
-                
-                const link = document.createElement("a");
-                link.href = archivo.url;
-                link.textContent = archivo.nombre;
-                link.target = "_blank";
-                link.onclick = (e) => {
-                    e.preventDefault();
-                    verPDF(archivo.url);
-                };
-                
-                const downloadBtn = document.createElement("button");
-                downloadBtn.textContent = "Descargar";
-                downloadBtn.onclick = () => {
-                    window.open(archivo.url, "_blank");
-                };
-                
-                div.appendChild(link);
-                div.appendChild(downloadBtn);
-                listaPDF.appendChild(div);
-            });
+        // 📌 FUNCIÓN PARA CERRAR SESIÓN
+        function logout() {
+            document.getElementById("login-container").style.display = "block";
+            document.getElementById("main-content").style.display = "none";
         }
-
-        function verPDF(url) {
-            const viewer = document.getElementById("pdfViewer");
-            viewer.src = url;
-            viewer.style.display = "block";
-        }
-
-        document.getElementById("area").addEventListener("change", mostrarPDFs);
     </script>
 </body>
 </html>
