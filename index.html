@@ -54,6 +54,19 @@
             width: 150px;
             margin-bottom: 20px;
         }
+        .areas {
+            margin-top: 20px;
+        }
+        .area {
+            background: #e3e3e3;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .area:hover {
+            background: #d1d1d1;
+        }
     </style>
 </head>
 <body>
@@ -69,8 +82,22 @@
 
     <!-- CONTENIDO PRINCIPAL -->
     <div id="mainContainer" class="container hidden">
+        <img src="logo_sspc2.png" alt="Logo" class="logo">
         <h2>Gestión de Expedientes</h2>
-        <h3>Expediente Disponible</h3>
+
+        <!-- ÁREAS -->
+        <div class="areas">
+            <h3>Selecciona un Área</h3>
+
+            <div class="area" onclick="mostrarPDF('medica')">Área Médica</div>
+            <div class="area" onclick="mostrarPDF('pedagogia')">Pedagogía</div>
+            <div class="area" onclick="mostrarPDF('criminologia')">Criminología</div>
+            <div class="area" onclick="mostrarPDF('psicologia')">Psicología</div>
+            <div class="area" onclick="mostrarPDF('direccion')">Dirección</div>
+            <div class="area" onclick="mostrarPDF('trabajo_social')">Trabajo Social</div>
+            <div class="area" onclick="mostrarPDF('juridico')">Jurídico</div>
+            <div class="area" onclick="mostrarPDF('calendario')">Calendario de Actividades</div>
+        </div>
 
         <div id="pdfList"></div>
 
@@ -85,10 +112,19 @@
         const validUser = "umecasca@gmail.com";
         const validPass = "2025DEMA";
 
-        // 📌 Expediente desde Google Drive
-        const expediente = {
-            nombre: "Expediente Clínico.pdf",
-            id: "1UwEXR6B4UhbJ2BDIKu-XYrxeItzTi_tA" // ID del archivo de Google Drive
+        // 📌 Expedientes organizados por áreas
+        const expedientes = {
+            medica: {
+                nombre: "Expediente Clínico.pdf",
+                id: "1UwEXR6B4UhbJ2BDIKu-XYrxeItzTi_tA"
+            },
+            pedagogia: null, 
+            criminologia: null, 
+            psicologia: null, 
+            direccion: null, 
+            trabajo_social: null, 
+            juridico: null, 
+            calendario: null 
         };
 
         function login() {
@@ -98,7 +134,6 @@
             if (username === validUser && password === validPass) {
                 document.getElementById("loginContainer").classList.add("hidden");
                 document.getElementById("mainContainer").classList.remove("hidden");
-                mostrarPDF();
             } else {
                 alert("Usuario o contraseña incorrectos");
             }
@@ -109,30 +144,36 @@
             document.getElementById("mainContainer").classList.add("hidden");
         }
 
-        function mostrarPDF() {
+        function mostrarPDF(area) {
             const listaPDF = document.getElementById("pdfList");
             listaPDF.innerHTML = ""; 
 
-            const div = document.createElement("div");
-            div.classList.add("file-item");
+            const expediente = expedientes[area];
 
-            // Botón para visualizar
-            const verBtn = document.createElement("button");
-            verBtn.textContent = "Ver Expediente";
-            verBtn.onclick = () => verPDF(expediente.id);
+            if (expediente && expediente.id) {
+                const div = document.createElement("div");
+                div.classList.add("file-item");
 
-            // Botón para descargar
-            const downloadBtn = document.createElement("a");
-            downloadBtn.href = `https://drive.google.com/uc?export=download&id=${expediente.id}`;
-            downloadBtn.textContent = "Descargar Expediente";
-            downloadBtn.classList.add("btn");
-            downloadBtn.setAttribute("download", expediente.nombre);
+                // Botón para visualizar
+                const verBtn = document.createElement("button");
+                verBtn.textContent = "Ver Expediente";
+                verBtn.onclick = () => verPDF(expediente.id);
 
-            div.appendChild(document.createTextNode(expediente.nombre));
-            div.appendChild(verBtn);
-            div.appendChild(downloadBtn);
+                // Botón para descargar
+                const downloadBtn = document.createElement("a");
+                downloadBtn.href = `https://drive.google.com/uc?export=download&id=${expediente.id}`;
+                downloadBtn.textContent = "Descargar Expediente";
+                downloadBtn.classList.add("btn");
+                downloadBtn.setAttribute("download", expediente.nombre);
 
-            listaPDF.appendChild(div);
+                div.appendChild(document.createTextNode(expediente.nombre));
+                div.appendChild(verBtn);
+                div.appendChild(downloadBtn);
+
+                listaPDF.appendChild(div);
+            } else {
+                listaPDF.innerHTML = "<p>No hay expedientes en esta área.</p>";
+            }
         }
 
         function verPDF(fileId) {
