@@ -20,7 +20,7 @@
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
         h2 { color: #333; }
-        select, button {
+        select, button, input {
             width: 100%;
             margin: 10px 0;
             padding: 8px;
@@ -52,28 +52,52 @@
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="loginContainer">
+        <h2>Iniciar Sesión</h2>
+        <input type="text" id="usuario" placeholder="Usuario">
+        <input type="password" id="contrasena" placeholder="Contraseña">
+        <button onclick="verificarLogin()">Ingresar</button>
+    </div>
+
+    <div class="container" id="appContainer" style="display: none;">
         <h2>Gestión de Expedientes</h2>
         <label for="area">Selecciona el Área:</label>
-        <select id="area" onchange="mostrarPDFs()">
+        <select id="area">
             <option value="medica">Área Médica</option>
             <option value="pedagogia">Pedagogía</option>
             <option value="criminologia">Criminología</option>
-            <option value="psicologia">Psicología</option>
         </select>
-        <h3>Expedientes</h3>
+        <h3>Expedientes Guardados</h3>
         <div id="pdfList"></div>
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
     </div>
 
     <script>
+        const usuarioCorrecto = "admin";
+        const contrasenaCorrecta = "1234";
+
+        function verificarLogin() {
+            const usuario = document.getElementById("usuario").value;
+            const contrasena = document.getElementById("contrasena").value;
+            if (usuario === usuarioCorrecto && contrasena === contrasenaCorrecta) {
+                document.getElementById("loginContainer").style.display = "none";
+                document.getElementById("appContainer").style.display = "block";
+                mostrarPDFs();
+            } else {
+                alert("Usuario o contraseña incorrectos");
+            }
+        }
+
         const expedientes = {
             "medica": [
                 { nombre: "Historia Clínica.pdf", url: "https://github.com/sistemaskari/BD-DEMA/raw/main/RESUMEN%20CL%C3%8DNICO%20TRIMESTRAL%20HERLINDA.pdf" }
             ],
-            "pedagogia": [],
-            "criminologia": [],
-            "psicologia": []
+            "pedagogia": [
+                { nombre: "Informe Educativo.pdf", url: "https://github.com/sistemaskari/BD-DEMA/raw/main/Informe-Educativo.pdf" }
+            ],
+            "criminologia": [
+                { nombre: "Evaluación de Riesgo.pdf", url: "https://github.com/sistemaskari/BD-DEMA/raw/main/Evaluacion-Riesgo.pdf" }
+            ]
         };
 
         function mostrarPDFs() {
@@ -83,7 +107,7 @@
 
             const archivos = expedientes[areaSeleccionada] || [];
             if (archivos.length === 0) {
-                listaPDF.innerHTML = "<p>No hay archivos disponibles.</p>";
+                listaPDF.innerHTML = "<p>No hay archivos disponibles para esta área.</p>";
                 return;
             }
 
@@ -100,12 +124,14 @@
                     verPDF(archivo.url);
                 };
 
-                const downloadBtn = document.createElement("button");
-                downloadBtn.textContent = "Descargar";
-                downloadBtn.onclick = () => window.open(archivo.url, '_blank');
-                
+                const botonDescargar = document.createElement("button");
+                botonDescargar.textContent = "Descargar";
+                botonDescargar.onclick = () => {
+                    window.open(archivo.url, "_blank");
+                };
+
                 div.appendChild(link);
-                div.appendChild(downloadBtn);
+                div.appendChild(botonDescargar);
                 listaPDF.appendChild(div);
             });
         }
@@ -116,6 +142,7 @@
             viewer.style.display = "block";
         }
 
+        document.getElementById("area").addEventListener("change", mostrarPDFs);
         window.onload = mostrarPDFs;
     </script>
 </body>
