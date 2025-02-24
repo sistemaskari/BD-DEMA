@@ -54,33 +54,43 @@
 </head>
 <body>
     <div id="loginContainer" class="container">
-        <img src="logo.png" alt="Logo" width="100">
+        <img src="logo._sspc2.png" alt="Logo" width="100">
         <h2>Iniciar Sesión</h2>
         <input type="text" id="username" placeholder="Usuario">
         <input type="password" id="password" placeholder="Contraseña">
         <button onclick="login()">Ingresar</button>
     </div>
-    
+
     <div id="mainContainer" class="container hidden">
         <h2>Gestión de Expedientes</h2>
         <label for="area">Selecciona el Área:</label>
-        <select id="area" onchange="mostrarPDFs()">
+        <select id="area">
             <option value="medica">Área Médica</option>
             <option value="pedagogia">Pedagogía</option>
+            <option value="criminologia">Criminología</option>
+            <option value="psicologia">Psicología</option>
+            <option value="direccion">Dirección</option>
+            <option value="trabajo_social">Trabajo Social</option>
+            <option value="juridico">Jurídico</option>
+            <option value="horario_actividades">Horario de Actividades</option>
         </select>
         <h3>Expedientes Guardados</h3>
         <div id="pdfList"></div>
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
     </div>
-    
+
     <script>
-        const usuarios = { "umecasca@gmail.com": "2025DEMA" };
+        const validUser = "umecasca@gmail.com";
+        const validPass = "2025DEMA";
+
         function login() {
-            let user = document.getElementById("username").value;
-            let pass = document.getElementById("password").value;
-            if (usuarios[user] === pass) {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            if (username === validUser && password === validPass) {
                 document.getElementById("loginContainer").classList.add("hidden");
                 document.getElementById("mainContainer").classList.remove("hidden");
+                mostrarPDFs();
             } else {
                 alert("Usuario o contraseña incorrectos");
             }
@@ -88,18 +98,27 @@
 
         const expedientes = {
             "medica": [
-                { nombre: "Historia Clínica.pdf", url: "https://github.com/sistemaskari/BD-DEMA/blob/main/Historia-Clinica.pdf?raw=true" }
+                { nombre: "Historia Clínica.pdf", url: "" },
+                { nombre: "Diagnóstico Médico.pdf", url: "https://github.com/sistemaskari/BD-DEMA/raw/main/medica/Diagnostico-Medico.pdf" }
             ],
             "pedagogia": [
-                { nombre: "Informe Educativo.pdf", url: "https://github.com/sistemaskari/BD-DEMA/blob/main/Informe-Educativo.pdf?raw=true" }
+                { nombre: "Informe Educativo.pdf", url: "https://github.com/sistemaskari/BD-DEMA/raw/main/pedagogia/Informe-Educativo.pdf" }
+            ],
+            "criminologia": [
+                { nombre: "Evaluación de Riesgo.pdf", url: "https://github.com/sistemaskari/BD-DEMA/raw/main/criminologia/Evaluacion-Riesgo.pdf" }
             ]
         };
 
         function mostrarPDFs() {
-            const area = document.getElementById("area").value;
+            const areaSeleccionada = document.getElementById("area").value;
             const listaPDF = document.getElementById("pdfList");
             listaPDF.innerHTML = "";
-            const archivos = expedientes[area] || [];
+            
+            const archivos = expedientes[areaSeleccionada] || [];
+            if (archivos.length === 0) {
+                listaPDF.innerHTML = "<p>No hay archivos disponibles para esta área.</p>";
+                return;
+            }
             
             archivos.forEach(archivo => {
                 const div = document.createElement("div");
@@ -131,6 +150,8 @@
             viewer.src = url;
             viewer.style.display = "block";
         }
+
+        document.getElementById("area").addEventListener("change", mostrarPDFs);
     </script>
 </body>
 </html>
