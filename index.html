@@ -49,40 +49,38 @@
             display: none;
             border: 1px solid #ccc;
         }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div class="container" id="loginContainer">
+    <div id="loginContainer" class="container">
+        <img src="logo.png" alt="Logo" width="100">
         <h2>Iniciar Sesión</h2>
-        <input type="text" id="usuario" placeholder="Usuario">
-        <input type="password" id="contrasena" placeholder="Contraseña">
-        <button onclick="verificarLogin()">Ingresar</button>
+        <input type="text" id="username" placeholder="Usuario">
+        <input type="password" id="password" placeholder="Contraseña">
+        <button onclick="login()">Ingresar</button>
     </div>
-
-    <div class="container" id="appContainer" style="display: none;">
+    
+    <div id="mainContainer" class="container hidden">
         <h2>Gestión de Expedientes</h2>
         <label for="area">Selecciona el Área:</label>
-        <select id="area">
+        <select id="area" onchange="mostrarPDFs()">
             <option value="medica">Área Médica</option>
             <option value="pedagogia">Pedagogía</option>
-            <option value="criminologia">Criminología</option>
         </select>
         <h3>Expedientes Guardados</h3>
         <div id="pdfList"></div>
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
     </div>
-
+    
     <script>
-        const usuarioCorrecto = "admin";
-        const contrasenaCorrecta = "1234";
-
-        function verificarLogin() {
-            const usuario = document.getElementById("usuario").value;
-            const contrasena = document.getElementById("contrasena").value;
-            if (usuario === usuarioCorrecto && contrasena === contrasenaCorrecta) {
-                document.getElementById("loginContainer").style.display = "none";
-                document.getElementById("appContainer").style.display = "block";
-                mostrarPDFs();
+        const usuarios = { "admin": "1234" };
+        function login() {
+            let user = document.getElementById("username").value;
+            let pass = document.getElementById("password").value;
+            if (usuarios[user] === pass) {
+                document.getElementById("loginContainer").classList.add("hidden");
+                document.getElementById("mainContainer").classList.remove("hidden");
             } else {
                 alert("Usuario o contraseña incorrectos");
             }
@@ -90,31 +88,23 @@
 
         const expedientes = {
             "medica": [
-                { nombre: "Historia Clínica.pdf", url: "https://github.com/sistemaskari/BD-DEMA/raw/main/RESUMEN%20CL%C3%8DNICO%20TRIMESTRAL%20HERLINDA.pdf" }
+                { nombre: "Historia Clínica.pdf", url: "https://github.com/sistemaskari/BD-DEMA/blob/main/Historia-Clinica.pdf?raw=true" }
             ],
             "pedagogia": [
-                { nombre: "Informe Educativo.pdf", url: "https://github.com/sistemaskari/BD-DEMA/raw/main/Informe-Educativo.pdf" }
-            ],
-            "criminologia": [
-                { nombre: "Evaluación de Riesgo.pdf", url: "https://github.com/sistemaskari/BD-DEMA/raw/main/Evaluacion-Riesgo.pdf" }
+                { nombre: "Informe Educativo.pdf", url: "https://github.com/sistemaskari/BD-DEMA/blob/main/Informe-Educativo.pdf?raw=true" }
             ]
         };
 
         function mostrarPDFs() {
-            const areaSeleccionada = document.getElementById("area").value;
+            const area = document.getElementById("area").value;
             const listaPDF = document.getElementById("pdfList");
             listaPDF.innerHTML = "";
-
-            const archivos = expedientes[areaSeleccionada] || [];
-            if (archivos.length === 0) {
-                listaPDF.innerHTML = "<p>No hay archivos disponibles para esta área.</p>";
-                return;
-            }
-
+            const archivos = expedientes[area] || [];
+            
             archivos.forEach(archivo => {
                 const div = document.createElement("div");
                 div.classList.add("file-item");
-
+                
                 const link = document.createElement("a");
                 link.href = archivo.url;
                 link.textContent = archivo.nombre;
@@ -123,15 +113,15 @@
                     e.preventDefault();
                     verPDF(archivo.url);
                 };
-
-                const botonDescargar = document.createElement("button");
-                botonDescargar.textContent = "Descargar";
-                botonDescargar.onclick = () => {
+                
+                const downloadBtn = document.createElement("button");
+                downloadBtn.textContent = "Descargar";
+                downloadBtn.onclick = () => {
                     window.open(archivo.url, "_blank");
                 };
-
+                
                 div.appendChild(link);
-                div.appendChild(botonDescargar);
+                div.appendChild(downloadBtn);
                 listaPDF.appendChild(div);
             });
         }
@@ -141,9 +131,6 @@
             viewer.src = url;
             viewer.style.display = "block";
         }
-
-        document.getElementById("area").addEventListener("change", mostrarPDFs);
-        window.onload = mostrarPDFs;
     </script>
 </body>
 </html>
