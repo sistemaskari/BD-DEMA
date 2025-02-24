@@ -116,9 +116,9 @@
         const expedientes = {
             medica: [
                 { nombre: "Herlinda Expediente Clínico.pdf", id: "1UwEXR6B4UhbJ2BDIKu-XYrxeItzTi_tA"}, 
-                {  nombre: "Hobeth Expediente Clínico.pdf", id: "1ajZ4pmQtxW0ots1m6uTyR8WClGFO5" },
-                { nombre: "Renato Expediente Clínico Renato.pdf", id: "1te4kVNRYoaE0SQQhMhVQ4b2pRbBamR0n" },
-                { nombre: "Misael Expediente Clínico Misael.pdf", id: "1gIpKPA4e33h_l2O4F95JngFs5riXE21u" },
+                { nombre: "Hobeth Expediente Clínico.pdf", id: "1ajZ4pmQtxW0ots1m6uTyR8WClGFO5" },
+                { nombre: "Renato Expediente Clínico.pdf", id: "1te4kVNRYoaE0SQQhMhVQ4b2pRbBamR0n" },
+                { nombre: "Misael Expediente Clínico.pdf", id: "1gIpKPA4e33h_l2O4F95JngFs5riXE21u" },
             ],
             pedagogia: [],
             criminologia: [],
@@ -150,29 +150,31 @@
             const listaPDF = document.getElementById("pdfList");
             listaPDF.innerHTML = ""; 
 
-            const expediente = expedientes[area];
+            const expedienteList = expedientes[area];
 
-            if (expediente && expediente.id) {
-                const div = document.createElement("div");
-                div.classList.add("file-item");
+            if (expedienteList.length > 0) {
+                expedienteList.forEach(expediente => {
+                    const div = document.createElement("div");
+                    div.classList.add("file-item");
 
-                // Botón para visualizar
-                const verBtn = document.createElement("button");
-                verBtn.textContent = "Ver Expediente";
-                verBtn.onclick = () => verPDF(expediente.id);
+                    // Botón para visualizar
+                    const verBtn = document.createElement("button");
+                    verBtn.textContent = "Ver Expediente";
+                    verBtn.onclick = () => verPDF(expediente.id);
 
-                // Botón para descargar
-                const downloadBtn = document.createElement("a");
-                downloadBtn.href = `https://drive.google.com/uc?export=download&id=${expediente.id}`;
-                downloadBtn.textContent = "Descargar Expediente";
-                downloadBtn.classList.add("btn");
-                downloadBtn.setAttribute("download", expediente.nombre);
+                    // Botón para descargar
+                    const downloadBtn = document.createElement("a");
+                    downloadBtn.href = `https://drive.google.com/uc?export=download&id=${expediente.id}`;
+                    downloadBtn.textContent = "Descargar Expediente";
+                    downloadBtn.classList.add("btn");
+                    downloadBtn.setAttribute("download", expediente.nombre);
 
-                div.appendChild(document.createTextNode(expediente.nombre));
-                div.appendChild(verBtn);
-                div.appendChild(downloadBtn);
+                    div.appendChild(document.createTextNode(expediente.nombre));
+                    div.appendChild(verBtn);
+                    div.appendChild(downloadBtn);
 
-                listaPDF.appendChild(div);
+                    listaPDF.appendChild(div);
+                });
             } else {
                 listaPDF.innerHTML = "<p>No hay expedientes en esta área.</p>";
             }
