@@ -63,10 +63,8 @@
                 "Renato": [{ nombre: "Expediente Clínico.pdf", id: "1te4kVNRYoaE0SQQhMhVQ4b2pRbBamR0n" }],
                 "Misael": [{ nombre: "Expediente Clínico.pdf", id: "1gIpKPA4e33h_l2O4F95JngFs5riXE21u" }],
                 "Javier": [{ nombre: "Expediente Clínico.pdf", id: "1i2pKnkDKO7q0o7RPbbp5dLXFkYL1hn7y" }],
-                "Ramiro": [
-                    { nombre: "Expediente Clínico.pdf", id: "1N2tSHzUh0B4hDsOaqiQMTs3d7hJ3OYkB" },
-                    { nombre: "INDICACIONES MEDICAS.pdf", id: "1bvywu-cr1pIXbrKtDVM8zCxsT12M7W6M" }
-                ]
+                "Ramiro": [{ nombre: "Expediente Clínico.pdf", id: "1N2tSHzUh0B4hDsOaqiQMTs3d7hJ3OYkB" }],
+                "INDICACIONES MEDICAS DE RAMIRO": [{ nombre: "INDICACIONES MEDICAS.pdf", id: "1bvywu-cr1pIXbrKtDVM8zCxsT12M7W6M" }]
             },
             pedagogia: {},
             criminologia: {
@@ -92,6 +90,24 @@
             calendario: {}
         };
 
+        function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            if (username === validUser && password === validPass) {
+                document.getElementById("loginContainer").classList.add("hidden");
+                document.getElementById("mainContainer").classList.remove("hidden");
+                mostrarAreas();
+            } else {
+                alert("Usuario o contraseña incorrectos");
+            }
+        }
+
+        function logout() {
+            document.getElementById("loginContainer").classList.remove("hidden");
+            document.getElementById("mainContainer").classList.add("hidden");
+            cerrarPDF();
+        }
+
         function mostrarAreas() {
             const areaList = document.getElementById("areaList");
             areaList.innerHTML = "";
@@ -102,6 +118,49 @@
                 div.onclick = () => mostrarAdolescentes(area);
                 areaList.appendChild(div);
             });
+        }
+
+        function mostrarAdolescentes(area) {
+            cerrarPDF();
+            const adolescenteList = document.getElementById("adolescenteList");
+            adolescenteList.innerHTML = `<h3>Adolescentes en ${area}</h3>`;
+
+            if (!expedientes[area] || Object.keys(expedientes[area]).length === 0) {
+                adolescenteList.innerHTML += "<p>No hay adolescentes registrados en esta área.</p>";
+                return;
+            }
+
+            Object.keys(expedientes[area]).forEach(adolescente => {
+                const div = document.createElement("div");
+                div.classList.add("file-item");
+                div.textContent = adolescente;
+                div.onclick = () => mostrarExpedientes(area, adolescente);
+                adolescenteList.appendChild(div);
+            });
+        }
+
+        function mostrarExpedientes(area, adolescente) {
+            cerrarPDF();
+            const pdfList = document.getElementById("pdfList");
+            pdfList.innerHTML = `<h3>Expedientes de ${adolescente}</h3>`;
+
+            expedientes[area][adolescente].forEach(expediente => {
+                const div = document.createElement("div");
+                div.classList.add("file-item");
+                div.textContent = expediente.nombre;
+                div.onclick = () => verPDF(expediente.id);
+                pdfList.appendChild(div);
+            });
+        }
+
+        function verPDF(fileId) {
+            const viewer = document.getElementById("pdfViewer");
+            viewer.src = `https://drive.google.com/file/d/${fileId}/preview`;
+            viewer.style.display = "block";
+        }
+
+        function cerrarPDF() {
+            document.getElementById("pdfViewer").style.display = "none";
         }
     </script>
 </body>
