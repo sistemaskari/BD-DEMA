@@ -32,6 +32,7 @@
     </style>
 </head>
 <body>
+
     <div id="loginContainer" class="container">
         <img src="logo_sspc2.png" alt="Logo" class="logo">
         <h2>Iniciar Sesión</h2>
@@ -56,16 +57,18 @@
         const validPass = "2025DEMA";
 
         const expedientes = {
-            medica: [
-                { nombre: "Herlinda Expediente Clínico.pdf", id: "1UwEXR6B4UhbJ2BDIKu-XYrxeItzTi_tA"}, 
-                { nombre: "Hobeth Expediente Clínico.pdf", id: "1ajZ4pmQtxW0ots1m6uTyR8WClGFO5-qs" },
-                { nombre: "Renato Expediente Clínico.pdf", id: "1te4kVNRYoaE0SQQhMhVQ4b2pRbBamR0n" },
-                { nombre: "Misael Expediente Clínico.pdf", id: "1gIpKPA4e33h_l2O4F95JngFs5riXE21u" },
-                { nombre: "Javier Expediente Clínico.pdf", id: "1i2pKnkDKO7q0o7RPbbp5dLXFkYL1hn7y" },
-                { nombre: "Ramiro Expediente Clínico.pdf", id: "1N2tSHzUh0B4hDsOaqiQMTs3d7hJ3OYkB" },
-                { nombre: "INDICACIONES MEDICAS DE RAMIRO.pdf", id: "1bvywu-cr1pIXbrKtDVM8zCxsT12M7W6M" }
-            ],
-            pedagogia: [],
+            medica: {
+                "Herlinda": [{ nombre: "Expediente Clínico.pdf", id: "1UwEXR6B4UhbJ2BDIKu-XYrxeItzTi_tA" }],
+                "Hobeth": [{ nombre: "Expediente Clínico.pdf", id: "1ajZ4pmQtxW0ots1m6uTyR8WClGFO5-qs" }],
+                "Renato": [{ nombre: "Expediente Clínico.pdf", id: "1te4kVNRYoaE0SQQhMhVQ4b2pRbBamR0n" }],
+                "Misael": [{ nombre: "Expediente Clínico.pdf", id: "1gIpKPA4e33h_l2O4F95JngFs5riXE21u" }],
+                "Javier": [{ nombre: "Expediente Clínico.pdf", id: "1i2pKnkDKO7q0o7RPbbp5dLXFkYL1hn7y" }],
+                "Ramiro": [
+                    { nombre: "Expediente Clínico.pdf", id: "1N2tSHzUh0B4hDsOaqiQMTs3d7hJ3OYkB" },
+                    { nombre: "INDICACIONES MEDICAS.pdf", id: "1bvywu-cr1pIXbrKtDVM8zCxsT12M7W6M" }
+                ]
+            },
+            pedagogia: {},
             criminologia: {
                 "Argeo Alvarez Chiñas": [
                     { nombre: "Actualización de estudio criminal.pdf", id: "1A_DCH9QpJZeIpVYy-OpHMK4EWps2m3LS" },
@@ -82,35 +85,23 @@
                     { nombre: "Actualización de estudio criminal.pdf", id: "1KN71QK9_uXeMrt5OajZAHnACgN1O8GRa" }
                 ]
             },
-            psicologia: [],
-            direccion: [],
-            trabajo_social: [],
-            juridico: [],
-            calendario: []
+            psicologia: {},
+            direccion: {},
+            trabajo_social: {},
+            juridico: {},
+            calendario: {}
         };
 
-        function login() {
-            const username = document.getElementById("username").value;
-            const password = document.getElementById("password").value;
-            if (username === validUser && password === validPass) {
-                document.getElementById("loginContainer").classList.add("hidden");
-                document.getElementById("mainContainer").classList.remove("hidden");
-                mostrarAreas();
-            } else {
-                alert("Usuario o contraseña incorrectos");
-            }
-        }
-
-        function logout() {
-            document.getElementById("loginContainer").classList.remove("hidden");
-            document.getElementById("mainContainer").classList.add("hidden");
-            cerrarPDF();
-        }
-
-        function cerrarPDF() {
-            const viewer = document.getElementById("pdfViewer");
-            viewer.style.display = "none";
-            viewer.src = "";
+        function mostrarAreas() {
+            const areaList = document.getElementById("areaList");
+            areaList.innerHTML = "";
+            Object.keys(expedientes).forEach(area => {
+                const div = document.createElement("div");
+                div.classList.add("area-item");
+                div.textContent = area.charAt(0).toUpperCase() + area.slice(1);
+                div.onclick = () => mostrarAdolescentes(area);
+                areaList.appendChild(div);
+            });
         }
     </script>
 </body>
