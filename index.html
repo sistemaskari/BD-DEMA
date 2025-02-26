@@ -59,7 +59,9 @@
         const expedientes = {
             medica: {
                 "Herlinda": [{ nombre: "Expediente Clínico.pdf", id: "1UwEXR6B4UhbJ2BDIKu-XYrxeItzTi_tA" }],
-                "Hobeth": [{ nombre: "Expediente Clínico.pdf", id: "1ajZ4pmQtxW0ots1m6uTyR8WClGFO5-qs" }]
+                "Hobeth": [{ nombre: "Expediente Clínico.pdf", id: "1ajZ4pmQtxW0ots1m6uTyR8WClGFO5-qs" }],
+                "Renato": [{ nombre: "Expediente Clínico.pdf", id: "1te4kVNRYoaE0SQQhMhVQ4b2pRbBamR0n" }],
+                "Misael": [{ nombre: "Expediente Clínico.pdf", id: "1gIpKPA4e33h_l2O4F95JngFs5riXE21u" }]
             },
             criminologia: {
                 "Argeo Alvarez Chiñas": [
@@ -69,6 +71,9 @@
                 "Hobeth Issac Olivera Vega": [
                     { nombre: "Actualización de estudio criminal.pdf", id: "1PXN3VKtr7NMsIKwngDHKPZqpUV7I70cH" },
                     { nombre: "Ingreso.pdf", id: "1YMm6fo0VvqOsE5lSAMcg_v4fypXe8e6B" }
+                ],
+                "Kevin Morán Salvador": [
+                    { nombre: "Actualización de estudio criminal.pdf", id: "1KN71QK9_uXeMrt5OajZAHnACgN1O8GRa" }
                 ]
             }
         };
@@ -88,6 +93,7 @@
         function logout() {
             document.getElementById("loginContainer").classList.remove("hidden");
             document.getElementById("mainContainer").classList.add("hidden");
+            cerrarPDF();
         }
 
         function mostrarAreas() {
@@ -103,6 +109,7 @@
         }
 
         function mostrarAdolescentes(area) {
+            cerrarPDF();
             const adolescenteList = document.getElementById("adolescenteList");
             adolescenteList.innerHTML = `<h3>Adolescentes en ${area}</h3>`;
 
@@ -121,6 +128,7 @@
         }
 
         function mostrarExpedientes(area, adolescente) {
+            cerrarPDF();
             const pdfList = document.getElementById("pdfList");
             pdfList.innerHTML = `<h3>Expedientes de ${adolescente}</h3>`;
 
@@ -150,6 +158,7 @@
         }
 
         function verPDF(fileId) {
+            cerrarPDF();
             if (!fileId) {
                 alert("No se encontró el archivo.");
                 return;
@@ -157,6 +166,12 @@
             const viewer = document.getElementById("pdfViewer");
             viewer.src = `https://drive.google.com/file/d/${fileId}/preview`;
             viewer.style.display = "block";
+        }
+
+        function cerrarPDF() {
+            const viewer = document.getElementById("pdfViewer");
+            viewer.style.display = "none";
+            viewer.src = "";
         }
     </script>
 </body>
