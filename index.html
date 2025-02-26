@@ -33,14 +33,15 @@
             cursor: pointer;
         }
         button:hover { background-color: #0056b3; }
-        .file-item {
+        .file-item, .area-item {
             background: #ddd;
             padding: 10px;
             margin: 5px 0;
             border-radius: 5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            cursor: pointer;
+        }
+        .file-item:hover, .area-item:hover {
+            background: #d1d1d1;
         }
         .pdf-viewer {
             margin-top: 20px;
@@ -54,24 +55,10 @@
             width: 150px;
             margin-bottom: 20px;
         }
-        .areas {
-            margin-top: 20px;
-        }
-        .area {
-            background: #e3e3e3;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .area:hover {
-            background: #d1d1d1;
-        }
     </style>
 </head>
 <body>
 
-    <!-- LOGIN -->
     <div id="loginContainer" class="container">
         <img src="logo_sspc2.png" alt="Logo" class="logo">
         <h2>Iniciar Sesión</h2>
@@ -80,39 +67,21 @@
         <button onclick="login()">Ingresar</button>
     </div>
 
-    <!-- CONTENIDO PRINCIPAL -->
     <div id="mainContainer" class="container hidden">
         <img src="logo_sspc2.png" alt="Logo" class="logo">
         <h2>Gestión de Expedientes</h2>
-
-        <!-- ÁREAS -->
-        <div class="areas">
-            <h3>Selecciona un Área</h3>
-
-            <div class="area" onclick="mostrarPDF('medica')">Área Médica</div>
-            <div class="area" onclick="mostrarPDF('pedagogia')">Pedagogía</div>
-            <div class="area" onclick="mostrarPDF('criminologia')">Criminología</div>
-            <div class="area" onclick="mostrarPDF('psicologia')">Psicología</div>
-            <div class="area" onclick="mostrarPDF('direccion')">Dirección</div>
-            <div class="area" onclick="mostrarPDF('trabajo_social')">Trabajo Social</div>
-            <div class="area" onclick="mostrarPDF('juridico')">Jurídico</div>
-            <div class="area" onclick="mostrarPDF('calendario')">Calendario de Actividades</div>
-        </div>
-
+        <h3>Selecciona un Área</h3>
+        <div id="areaList"></div>
+        <div id="adolescenteList"></div>
         <div id="pdfList"></div>
-
-        <!-- Iframe para mostrar el PDF -->
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
-
         <button onclick="logout()">Cerrar Sesión</button>
     </div>
 
     <script>
-        // 📌 Usuario y contraseña
         const validUser = "umecasca@gmail.com";
         const validPass = "2025DEMA";
 
-        // 📌 Expedientes organizados por áreas
         const expedientes = {
             medica: [
                 { nombre: "Herlinda Expediente Clínico.pdf", id: "1UwEXR6B4UhbJ2BDIKu-XYrxeItzTi_tA"}, 
@@ -124,7 +93,22 @@
                 { nombre: "INDICACIONES MEDICAS DE RAMIRO.pdf", id: "1bvywu-cr1pIXbrKtDVM8zCxsT12M7W6M" },
             ],
             pedagogia: [],
-            criminologia: [],
+            criminologia: {
+                "Argeo Alvarez Chiñas": [
+                    { nombre: "Actualización de estudio criminal.pdf", id: "1A_DCH9QpJZeIpVYy-OpHMK4EWps2m3LS" },
+                    { nombre: "Ingreso.pdf", id: "1_-VmybxzOiPVvNZ8znib991gMS9KDIDR" },
+                    { nombre: "Trimestral.pdf", id: "14u2TUDDHrNulymSkv1qTvfqRNO01uJNQ" }
+                ],
+                "Hobeth Issac Olivera Vega": [
+                    { nombre: "Actualización de estudio criminal.pdf", id: "1PXN3VKtr7NMsIKwngDHKPZqpUV7I70cH" },
+                    { nombre: "Ingreso.pdf", id: "1YMm6fo0VvqOsE5lSAMcg_v4fypXe8e6B" },
+                    { nombre: "Global.pdf", id: "1K3fP9Q_wq1XFIMs-c0ozIseIOMTCdVWk" },
+                    { nombre: "Trimestral.pdf", id: "15JkWyTCYmUKJ3TOaRZfVREpqCYhL8tXg" }
+                ],
+                "Kevin Morán Salvador": [
+                    { nombre: "Actualización de estudio criminal.pdf", id: "1KN71QK9_uXeMrt5OajZAHnACgN1O8GRa" }
+                ]
+            },
             psicologia: [],
             direccion: [],
             trabajo_social: [],
@@ -135,10 +119,10 @@
         function login() {
             const username = document.getElementById("username").value;
             const password = document.getElementById("password").value;
-
             if (username === validUser && password === validPass) {
                 document.getElementById("loginContainer").classList.add("hidden");
                 document.getElementById("mainContainer").classList.remove("hidden");
+                mostrarAreas();
             } else {
                 alert("Usuario o contraseña incorrectos");
             }
@@ -149,46 +133,35 @@
             document.getElementById("mainContainer").classList.add("hidden");
         }
 
-        function mostrarPDF(area) {
-            const listaPDF = document.getElementById("pdfList");
-            listaPDF.innerHTML = ""; 
-
-            const expedienteList = expedientes[area];
-
-            if (expedienteList.length > 0) {
-                expedienteList.forEach(expediente => {
-                    const div = document.createElement("div");
-                    div.classList.add("file-item");
-
-                    // Botón para visualizar
-                    const verBtn = document.createElement("button");
-                    verBtn.textContent = "Ver Expediente";
-                    verBtn.onclick = () => verPDF(expediente.id);
-
-                    // Botón para descargar
-                    const downloadBtn = document.createElement("a");
-                    downloadBtn.href = `https://drive.google.com/uc?export=download&id=${expediente.id}`;
-                    downloadBtn.textContent = "Descargar Expediente";
-                    downloadBtn.classList.add("btn");
-                    downloadBtn.setAttribute("download", expediente.nombre);
-
-                    div.appendChild(document.createTextNode(expediente.nombre));
-                    div.appendChild(verBtn);
-                    div.appendChild(downloadBtn);
-
-                    listaPDF.appendChild(div);
-                });
-            } else {
-                listaPDF.innerHTML = "<p>No hay expedientes en esta área.</p>";
-            }
+        function mostrarAreas() {
+            const areaList = document.getElementById("areaList");
+            areaList.innerHTML = "";
+            Object.keys(expedientes).forEach(area => {
+                const div = document.createElement("div");
+                div.classList.add("area-item");
+                div.textContent = area.charAt(0).toUpperCase() + area.slice(1);
+                div.onclick = () => mostrarAdolescentes(area);
+                areaList.appendChild(div);
+            });
         }
 
-        function verPDF(fileId) {
-            const viewer = document.getElementById("pdfViewer");
-            viewer.src = `https://drive.google.com/file/d/${fileId}/preview`;
-            viewer.style.display = "block";
+        function mostrarAdolescentes(area) {
+            const adolescenteList = document.getElementById("adolescenteList");
+            adolescenteList.innerHTML = `<h3>Adolescentes en ${area}</h3>`;
+
+            if (!expedientes[area] || Object.keys(expedientes[area]).length === 0) {
+                adolescenteList.innerHTML += "<p>No hay adolescentes registrados en esta área.</p>";
+                return;
+            }
+
+            Object.keys(expedientes[area]).forEach(adolescente => {
+                const div = document.createElement("div");
+                div.classList.add("file-item");
+                div.textContent = adolescente;
+                div.onclick = () => mostrarExpedientes(area, adolescente);
+                adolescenteList.appendChild(div);
+            });
         }
     </script>
-
 </body>
 </html>
