@@ -29,12 +29,8 @@
             cursor: pointer;
         }
         .pdf-viewer { width: 100%; height: 500px; display: none; border: 1px solid #ccc; }
-        input, button {
-            display: block;
-            width: 100%;
-            margin: 5px 0;
-            padding: 10px;
-        }
+        input { display: block; width: 100%; padding: 10px; margin: 10px 0; }
+        button { padding: 10px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -52,8 +48,8 @@
         <h2>Gestión de Expedientes</h2>
         <h3>Selecciona un Área</h3>
         <div id="areaList"></div>
-        <div id="adolescenteList" class="hidden"></div>
-        <div id="pdfList" class="hidden"></div>
+        <div id="adolescenteList"></div>
+        <div id="pdfList"></div>
         <iframe id="pdfViewer" class="pdf-viewer"></iframe>
         <button onclick="logout()">Cerrar Sesión</button>
     </div>
@@ -67,31 +63,20 @@
                 "Herlinda": [{ nombre: "Expediente Clínico.pdf", id: "1UwEXR6B4UhbJ2BDIKu-XYrxeItzTi_tA" }],
                 "Hobeth": [{ nombre: "Expediente Clínico.pdf", id: "1ajZ4pmQtxW0ots1m6uTyR8WClGFO5-qs" }],
                 "Renato": [{ nombre: "Expediente Clínico.pdf", id: "1te4kVNRYoaE0SQQhMhVQ4b2pRbBamR0n" }],
-                "Misael": [{ nombre: "Expediente Clínico.pdf", id: "1gIpKPA4e33h_l2O4F95JngFs5riXE21u" }],
-                "Javier": [{ nombre: "Expediente Clínico.pdf", id: "1i2pKnkDKO7q0o7RPbbp5dLXFkYL1hn7y" }],
-                "Ramiro": [
-                    { nombre: "Expediente Clínico.pdf", id: "1N2tSHzUh0B4hDsOaqiQMTs3d7hJ3OYkB" },
-                    { nombre: "Indicaciones Médicas.pdf", id: "1bvywu-cr1pIXbrKtDVM8zCxsT12M7W6M" }
-                ]
+                "Misael": [{ nombre: "Expediente Clínico.pdf", id: "1gIpKPA4e33h_l2O4F95JngFs5riXE21u" }]
             },
-            pedagogia: {},
             criminologia: {
                 "Argeo Alvarez Chiñas": [
                     { nombre: "Actualización de estudio criminal.pdf", id: "1A_DCH9QpJZeIpVYy-OpHMK4EWps2m3LS" },
-                    { nombre: "Ingreso.pdf", id: "1_-VmybxzOiPVvNZ8znib991gMS9KDIDR" },
-                    { nombre: "Trimestral.pdf", id: "14u2TUDDHrNulymSkv1qTvfqRNO01uJNQ" }
+                    { nombre: "Ingreso.pdf", id: "1_-VmybxzOiPVvNZ8znib991gMS9KDIDR" }
                 ],
                 "Hobeth Issac Olivera Vega": [
                     { nombre: "Actualización de estudio criminal.pdf", id: "1PXN3VKtr7NMsIKwngDHKPZqpUV7I70cH" },
-                    { nombre: "Ingreso.pdf", id: "1YMm6fo0VvqOsE5lSAMcg_v4fypXe8e6B" },
-                    { nombre: "Global.pdf", id: "1K3fP9Q_wq1XFIMs-c0ozIseIOMTCdVWk" },
-                    { nombre: "Trimestral.pdf", id: "15JkWyTCYmUKJ3TOaRZfVREpqCYhL8tXg" }
-                ],
-                "Kevin Morán Salvador": [
-                    { nombre: "Actualización de estudio criminal.pdf", id: "1KN71QK9_uXeMrt5OajZAHnACgN1O8GRa" }
+                    { nombre: "Ingreso.pdf", id: "1YMm6fo0VvqOsE5lSAMcg_v4fypXe8e6B" }
                 ]
             },
             psicologia: {},
+            pedagogia: {},
             direccion: {},
             trabajo_social: {},
             juridico: {},
@@ -117,10 +102,6 @@
         }
 
         function mostrarAreas() {
-            cerrarPDF();
-            document.getElementById("adolescenteList").classList.add("hidden");
-            document.getElementById("pdfList").classList.add("hidden");
-
             const areaList = document.getElementById("areaList");
             areaList.innerHTML = "";
             Object.keys(expedientes).forEach(area => {
@@ -134,11 +115,13 @@
 
         function mostrarAdolescentes(area) {
             cerrarPDF();
-            document.getElementById("pdfList").classList.add("hidden");
-
             const adolescenteList = document.getElementById("adolescenteList");
-            adolescenteList.classList.remove("hidden");
             adolescenteList.innerHTML = `<h3>Adolescentes en ${area}</h3>`;
+
+            if (!expedientes[area] || Object.keys(expedientes[area]).length === 0) {
+                adolescenteList.innerHTML += "<p>No hay adolescentes registrados en esta área.</p>";
+                return;
+            }
 
             Object.keys(expedientes[area]).forEach(adolescente => {
                 const div = document.createElement("div");
@@ -151,29 +134,47 @@
 
         function mostrarExpedientes(area, adolescente) {
             cerrarPDF();
-            document.getElementById("pdfList").classList.remove("hidden");
-
             const pdfList = document.getElementById("pdfList");
+            pdfList.innerHTML = `<h3>Expedientes de ${adolescente}</h3>`;
+
+            if (!expedientes[area][adolescente]) {
+                pdfList.innerHTML += "<p>No hay expedientes disponibles.</p>";
+                return;
+            }
+
+            pdfList.classList.remove("hidden");
+            pdfList.innerHTML = ""; // Limpia los expedientes anteriores
+
             expedientes[area][adolescente].forEach(expediente => {
                 const div = document.createElement("div");
                 div.classList.add("file-item");
+
                 div.innerHTML = `${expediente.nombre} 
                     <button onclick="verPDF('${expediente.id}')">Ver</button> 
                     <a href="https://drive.google.com/uc?export=download&id=${expediente.id}" download>Descargar</a>`;
+
                 pdfList.appendChild(div);
             });
         }
 
         function verPDF(fileId) {
             cerrarPDF();
-            document.getElementById("pdfViewer").src = `https://drive.google.com/file/d/${fileId}/preview`;
-            document.getElementById("pdfViewer").style.display = "block";
+            if (!fileId) {
+                alert("No se encontró el archivo.");
+                return;
+            }
+            const viewer = document.getElementById("pdfViewer");
+            viewer.src = `https://drive.google.com/file/d/${fileId}/preview`;
+            viewer.style.display = "block";
         }
 
         function cerrarPDF() {
-            document.getElementById("pdfViewer").style.display = "none";
+            const viewer = document.getElementById("pdfViewer");
+            viewer.style.display = "none";
+            viewer.src = "";
         }
     </script>
 </body>
 </html>
+
 
